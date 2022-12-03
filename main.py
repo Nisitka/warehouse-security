@@ -6,5 +6,5 @@ if __name__ == '__main__':
     # строчка для олдов
     print("Hello, hackathon")
 
-    serverNeronNet = Core(sys.argv)
-    serverNeronNet.run()
+    warenouseSecurity = Core(sys.argv)
+    warenouseSecurity.run()
