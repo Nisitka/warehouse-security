@@ -3,10 +3,10 @@
 import os
 import cv2
 
-dataDir = os.getcwd() + "\\data"
+dataDir = os.getcwd() + "/data"
 
 nameFile = "test2.jpg"
-path = dataDir + "\\Images\\" + nameFile
+path = dataDir + "/Images/" + nameFile
 
 # Загрузка изображения
 image = cv2.imread(path) # как N-мерный массив numpy.
