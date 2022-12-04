@@ -5,8 +5,8 @@ import numpy as np
 from PIL import Image
 
 
-def pil2numpy(pach) -> np.ndarray:
-    img = Image.open(pach)
+def pil2numpy(path) -> np.ndarray:
+    img = Image.open(path)
 
     np_array = np.asarray(img)
     return np_array
