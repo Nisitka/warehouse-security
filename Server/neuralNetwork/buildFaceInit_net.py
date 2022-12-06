@@ -11,7 +11,6 @@ def pil2numpy(pach) -> np.ndarray:
     np_array = np.asarray(img)
     return np_array
 
-
 def numpy2pil(np_array: np.ndarray) -> Image:
     assert_msg = 'Input shall be a HxWx3 ndarray'
     assert isinstance(np_array, np.ndarray), assert_msg
