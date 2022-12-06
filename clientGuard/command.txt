@@ -1,0 +1,1 @@
+pyuic5 C:\Users\18-belousov.n.d\Documents\Diplom\Progarms\Python\security\mainWindow.ui -o C:\Users\18-belousov.n.d\Documents\Diplom\Progarms\Python\security\mainWindowUI.py
