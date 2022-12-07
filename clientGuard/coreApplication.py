@@ -2,6 +2,7 @@ from GUI import gui
 from networkModule import Socket
 
 from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtGui import QImage, QPixmap
 
 class Core(QObject):
     # run = pyqtSignal()
@@ -19,6 +20,11 @@ class Core(QObject):
 
         # инициализируем модуль сетевого соединения
         self.netModule = Socket()
+        self.netModule.importData[QPixmap, QPixmap].connect(self.getDataServer)
+
+    def getDataServer(self, imagePeople, imageCar):
+        self.guiApp.mainWin.updateVideoBarrier(imagePeople)
+        self.guiApp.mainWin.updateVideoCar(imageCar)
 
     def run(self):
         # запускаем модуль сетевого соединения (в отдельном потоке)

@@ -5,7 +5,9 @@ from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem
 
 from PyQt5.QtCore import QTimer, QTime
 
-from PyQt5.QtGui import QPalette, QBrush, QPixmap, QColor
+from PyQt5.QtGui import QPalette, QBrush, QPixmap, QColor, QImage
+
+import PyQt5.Qt
 
 import mainWindowUI # конвертированный файл дизайна
 
@@ -50,12 +52,6 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         self.setPalette(palette)
         
         self.setTableHistory()
-        
-        # !!!тестовое установление фотографий!!!
-        pix = QPixmap("fon.jpg")
-        self.updateVideoBarrier(pix)
-        pix = QPixmap("Koala.jpg")
-        self.updateVideoCar(pix)
        
     def setTableHistory(self):
         
@@ -66,12 +62,16 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         
         self.historyTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         
-    def updateVideoCar(self, Image):
-        pix = Image.scaled(600, 400)
+    def updateVideoCar(self, pix):
+
+        d = 0.7
+        pix = pix.scaled(pix.width() * d, pix.height() * d)
         self.videoCarLabel.setPixmap(pix)
         
-    def updateVideoBarrier(self, Image):
-        pix = Image.scaled(600, 400)
+    def updateVideoBarrier(self, pix):
+
+        d = 0.7
+        pix = pix.scaled(pix.width() * d, pix.height() * d)
         self.videoPeopleLabel.setPixmap(pix)
         
     def updateTime(self):
