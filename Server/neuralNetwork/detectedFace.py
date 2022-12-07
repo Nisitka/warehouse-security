@@ -25,7 +25,8 @@ print(f"{len(faces)} лиц обнаружено на изображении.")
 
 i = 1
 for x, y, width, height in faces:
-    crop_img = image[y:y + height, x:x + width]
+    crop_img = image[y:y + height, x:x + width] # numpy массив
+
     # сохраним изображение с обнаруженными лицами
     cv2.imwrite("faceDetectedTest" + str(i) + ".jpg", crop_img)
     i += 1
