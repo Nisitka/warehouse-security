@@ -1,0 +1,3 @@
+pyuic5 D:\Programming\serverNeuronNet\disignerFiles\mainWindowGui.ui -o D:\Programming\serverNeuronNet\mainWindowGui.py
+
+pyuic5 D:\Programming\serverNeuronNet\disignerFiles\clientWindowGui.ui -o D:\Programming\serverNeuronNet\clientWindowGui.py
