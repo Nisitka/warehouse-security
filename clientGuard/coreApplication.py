@@ -12,6 +12,10 @@ class Core(QObject):
 
         # инициализируем интерфейс всего приложения
         self.guiApp = gui()
+
+        #
+        self.guiApp.initUserWin.initUserSignal[str, int, str, str].connect(self.autheUser)
+
         # соединяем сигналы взаимодействия ворот/турникета с ядром
         self.guiApp.openGateSignal.connect(self.openGate)
         self.guiApp.closeGateSignal.connect(self.closeGate)
@@ -20,18 +24,31 @@ class Core(QObject):
 
         # инициализируем модуль сетевого соединения
         self.netModule = Socket()
+        self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.importData[QPixmap, QPixmap].connect(self.getDataServer)
+
+    def authorizationUser(self, key):
+        if (key):
+            # запускаем модуль сетевого соединения (в отдельном потоке)
+            self.netModule.start()
+
+            # открываем главное окно интерфейса
+            self.guiApp.showMainWin()
+            # закрываем окно авторизации
+            self.guiApp.closeInitUserWin()
+        else:
+            print("Неверный логин или пароль")
+
+    def autheUser(self, host, port, login, password):
+        self.netModule.connectServer(host, port, login, password)
 
     def getDataServer(self, imagePeople, imageCar):
         self.guiApp.mainWin.updateVideoBarrier(imagePeople)
         self.guiApp.mainWin.updateVideoCar(imageCar)
 
     def run(self):
-        # запускаем модуль сетевого соединения (в отдельном потоке)
-        self.netModule.start()
-
-        # открываем главное окно интерфейса
-        self.guiApp.openMainWin()
+        # открываем окно авторизации пользователя
+        self.guiApp.showInitUserWin()
         
     def openGate(self):
         print("Ворота открыты")

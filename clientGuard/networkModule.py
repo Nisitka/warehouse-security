@@ -15,8 +15,8 @@ import pickle
 import json
 
 class Socket(QObject, Thread):
-    # getDataClient = pyqtSignal(str, list)  # сигнал получения данных
     importData = pyqtSignal(QPixmap, QPixmap)
+    initUserInfo = pyqtSignal(bool) # результат авторизации пользователя
 
     hVideo = 480
     wVideo = 640
@@ -31,23 +31,41 @@ class Socket(QObject, Thread):
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)  # временно!
 
-    def connectServer(self, host, port):
+    def connectServer(self, host, port, login, password):
         # инициализируем свой сокет
         self.__clientSocket = socket.socket()
         self.__clientSocket.connect((host, port))
 
-        message = "Guard/123"  # шифр из логина и пароля
+        message = str(login) + '/' + str(password)  # шифр из логина и пароля
         self.__clientSocket.sendall(message.encode("utf-8"))
 
+        dataServer = self.waitData()
+
+        # информируем об принятии результатов авторизации
+        message = "getInfoInit"
+        self.__clientSocket.sendall(message.encode("utf-8"))
+
+        print(dataServer)
+        self.initUserInfo.emit(not dataServer == "initFail")
+
     def run(self):
-        self.connectServer('26.78.198.77', 2323)
         while self.__working:
             self.getDataServer()
 
         print("Сетевой модуль выключен!")
 
+    # ожидание текстовой информации
+    def waitData(self):
+        while True:
+            dataServer = self.__clientSocket.recv(200)
+            dataServer = dataServer.decode("utf-8")
+            if not dataServer:
+                break
+            else:
+                return dataServer
+
     def getDataServer(self):
-        data = self.__clientSocket.recv(self.dataPackageSize)  # self.dataPackageSize
+        data = self.__clientSocket.recv(self.dataPackageSize + 10)  # self.dataPackageSize
         # print(len(list(data)))
 
         data = list(data)

@@ -71,7 +71,9 @@ class socketServer(QObject, Thread):
         self.__Clients.append(threadClient(self.__newConnection, self.__newClientAddress))
 
         # информируем об удачной инициализации
-        # self.sendData(self.__Clients[-1].getSocket(), "Авторизация произведена успешно")
+        self.sendTextData(self.__Clients[-1].getSocket(), "initSuccessfully")
+        data = self.waitData()
+        print(data)
 
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)  # временно!
@@ -86,7 +88,7 @@ class socketServer(QObject, Thread):
         print("client lock!")
 
         # информируем об неудачной попытке инициализации
-        self.sendTextData(self.__newConnection, "Неверный логин или пароль!")
+        self.sendTextData(self.__newConnection, "initFail")
         self.__newConnection.close()
 
     def sendImagesData(self):

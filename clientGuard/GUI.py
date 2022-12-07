@@ -1,6 +1,7 @@
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from GUI_mainWindow import mainWindow
+from GUI_initUserWindow import initWindow
 
 class gui(QObject):
     # getDataClient = pyqtSignal(str, list)  # сигнал получения данных
@@ -19,6 +20,8 @@ class gui(QObject):
         self.mainWin.openBarrier.connect(self.openBarrier)
         self.mainWin.closeBarrier.connect(self.closeBarrier)
 
+        self.initUserWin = initWindow()
+
     def openGate(self):
         self.openGateSignal.emit()
 
@@ -31,7 +34,13 @@ class gui(QObject):
     def closeBarrier(self):
         self.closeBarrierSignal.emit()
         
-    def openMainWin(self):
+    def showMainWin(self):
         self.mainWin.show()
+
+    def showInitUserWin(self):
+        self.initUserWin.show()
+
+    def closeInitUserWin(self):
+        self.initUserWin.close()
         
     
