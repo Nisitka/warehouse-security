@@ -1,3 +1,4 @@
+import numpy
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from threading import Thread
@@ -6,6 +7,9 @@ import socket as socketNetwork
 from Client import threadClient
 
 import codecs
+import json
+
+import cv2  # это временно!!!
 
 class socketServer(QObject, Thread):
     # список клиентов
@@ -43,7 +47,7 @@ class socketServer(QObject, Thread):
 
         return str(login), str(password)
 
-    # выполняется в отдельном потоке
+    # выполняется в отдельном потоке (только этот метод!)
     def run(self):
         print("Server run on port: " + str(self.__port))
 
@@ -53,10 +57,10 @@ class socketServer(QObject, Thread):
             # ожидание подключения: новый сокет и адрес клиента.
             # Именно этот сокет и будет использоваться для приема и посылке клиенту данных.
             self.__newConnection, self.__newClientAddress = self.__serverSocket.accept()
+            # self.addNewClient()
 
             login, password = self.__decodeUserData()
             self.requestConnection.emit(login, password, str(self.__newClientAddress))
-            #  self.__Clients.append(threadClient(connection, clientAddress))
 
         print("Server stopped")
 
@@ -67,21 +71,46 @@ class socketServer(QObject, Thread):
         self.__Clients.append(threadClient(self.__newConnection, self.__newClientAddress))
 
         # информируем об удачной инициализации
-        self.sendData(self.__Clients[-1].getSocket(), "Авторизация произведена успешно")
+        # self.sendData(self.__Clients[-1].getSocket(), "Авторизация произведена успешно")
+
+        # создать новый объект камеру
+        self.cap = cv2.VideoCapture(0)  # временно!
+
+        self.sendImagesData()
+        while True:
+            dataUser = self.waitData()
+            if (dataUser == "Get"):
+                self.sendImagesData()
 
     def lockNewClient(self):
         print("client lock!")
 
         # информируем об неудачной попытке инициализации
-        self.sendData(self.__newConnection, "Неверный логин или пароль!")
+        self.sendTextData(self.__newConnection, "Неверный логин или пароль!")
         self.__newConnection.close()
 
-    # отправка данных через указанный сокет (кому, что)
-    def sendData(self, socket, data):
-        if (type(data) == str):
-            data = codecs.encode(data, 'UTF-8')
+    def sendImagesData(self):
+        _, image = self.cap.read()  # потом это будет инфа с сервера
+        image = cv2.resize(image, dsize=(640, 480))
 
-        socket.sendall(data)
+        outArr = image.reshape((-1,))
+
+        self.__Clients[-1].getSocket().sendall(outArr)
+
+    def waitData(self):
+        while True:
+            dataUser = self.__newConnection.recv(200)
+            dataUser = dataUser.decode("utf-8")
+            if not dataUser:
+                break
+            else:
+                return dataUser
+
+
+
+    # отправка данных через указанный сокет (кому, что)
+    def sendTextData(self, socket, data):
+        socket.sendall(codecs.encode(str(data), 'UTF-8'))
 
     def __offClients(self):
         if (len(self.__Clients) > 0):

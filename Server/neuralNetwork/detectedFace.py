@@ -23,7 +23,6 @@ faces = face_cascade.detectMultiScale(image_gray)
 # печатать количество найденных лиц
 print(f"{len(faces)} лиц обнаружено на изображении.")
 
-# для всех обнаруженных лиц рисуем синий квадрат
 i = 1
 for x, y, width, height in faces:
     crop_img = image[y:y + height, x:x + width]
