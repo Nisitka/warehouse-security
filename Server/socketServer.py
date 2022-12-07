@@ -7,7 +7,7 @@ import socket as socketNetwork
 from Client import threadClient
 
 import codecs
-import json
+from sendersData import senderViideo
 
 import cv2  # это временно!!!
 
@@ -72,17 +72,23 @@ class socketServer(QObject, Thread):
 
         # информируем об удачной инициализации
         self.sendTextData(self.__Clients[-1].getSocket(), "initSuccessfully")
+
+        # дожидаемся готовности клиента и только тогда начинаем транслировать видео
         data = self.waitData()
         print(data)
 
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)  # временно!
 
+        sender = senderViideo(self.cap, self.__Clients[-1].getSocket())
+        sender.start()
+        '''
         self.sendImagesData()
         while True:
             dataUser = self.waitData()
             if (dataUser == "Get"):
                 self.sendImagesData()
+        '''
 
     def lockNewClient(self):
         print("client lock!")
