@@ -14,11 +14,11 @@ from functionGUI import setStyleButton
 from entries import Barrier, Gate
 
 class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
-    openBarrier = pyqtSignal()  # сигнал открытия турникета
-    closeBarrier = pyqtSignal() # сигнал закрытия турникета
+    openBarrier = pyqtSignal()   # сигнал открытия турникета
+    closeBarrier = pyqtSignal()  # сигнал закрытия турникета
     
-    openGate = pyqtSignal()  # сигнал открытия ворот
-    closeGate = pyqtSignal() # сигнал закрытия ворот
+    openGate = pyqtSignal()   # сигнал открытия ворот
+    closeGate = pyqtSignal()  # сигнал закрытия ворот
 
     def __init__(self):
         # Это здесь нужно для доступа к переменным, методам
@@ -105,7 +105,7 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
             setStyleButton(self.openGateButton, [200, 0, 0], "Открыть")
             
         else:
-            self.openBarrier.emit()
+            self.openGate.emit()
             self.gate.Open()
             setStyleButton(self.openGateButton, [0, 200, 0], "Закрыть")
             

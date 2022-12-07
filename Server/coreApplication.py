@@ -69,6 +69,6 @@ class Core(QObject):
         self.__server.stop()
 
     #   запуск ядра приложения
-    def start(self):
+    def run(self):
         self.__gui.getMainWindow().show()
         self.__app.exec_()

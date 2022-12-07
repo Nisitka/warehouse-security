@@ -4,7 +4,7 @@ from coreApplication import Core
 
 if __name__ == '__main__':
     # строчка для олдов
-    print("Hello, hackathon")
+    print("Hello, hackathon!")
 
     serverNeronNet = Core(sys.argv)
-    serverNeronNet.start()
+    serverNeronNet.run()
