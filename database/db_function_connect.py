@@ -81,4 +81,4 @@ def all_visits():  # функция для вывода всех посещен�
     
     return visits_objects_list
 
-print(all_visits())
+print(all_visits()[0].name())

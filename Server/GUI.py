@@ -5,7 +5,9 @@
 '''
 
 # главное окно
-from mainWindow import guiMainWindow
+# from mainWindow import guiMainWindow
+from GUI_mainWindow import mainWindow
+
 # окно редакции клиента
 from clientWindow import guiClientWindow
 
@@ -17,7 +19,7 @@ class guiApplication(QObject):
         QObject.__init__(self)
 
         # при запуске сразуже открываем главное окно
-        self.__mainWin = guiMainWindow()
+        self.__mainWin = mainWindow()
 
         # список с окнами клиентов
         self.__clientWindowList = []
