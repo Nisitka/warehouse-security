@@ -145,7 +145,12 @@ class socketServer(QObject, Thread):
         # выходим из ожидания подключения клиента
         self.__working = False
 
-        self.__serverSocket.shutdown(socketNetwork.SHUT_RDWR)
+        try:
+            self.__serverSocket.shutdown(socketNetwork.SHUT_RDWR)
+            print("Это Linux")
+        except:
+            print("Это windows детка")
+
         self.__serverSocket.close()  # выключаем сокет сервера
         self.__offClients()
 
