@@ -6,18 +6,14 @@ import codecs
 
 import enum
 
+import cv2  # это временно!!!
+
 # типы клиентов
 class typeClient(enum.Enum):
     Guard = 1
     Barrier = 2
 
-print(typeClient.Guard.value)
-
 class guardClient(QObject, Thread):
-    # сигналы:
-    # информируем об прекращении функционирования
-    # destroyed = pyqtSignal(str, int)  # логин, тип клиента
-
     dataPackageSize = 2048 * 1000 * 1000
 
     def __init__(self, socket_, address_, loginGuard_):
@@ -65,3 +61,33 @@ class guardClient(QObject, Thread):
 
     def getLoginGuard(self):
         return self.__loginGuard
+
+class cameraClient(QObject, Thread):
+    dataPackageSize = 2048 * 1000 * 1000
+
+    def __init__(self, socket_, loginCamera_):
+        QObject.__init__(self)
+        Thread.__init__(self)
+
+        # сокет взаимодействия с камерой
+        self.__socket = socket_
+
+        self.__login = loginCamera_
+
+        # создать новый объект камеру
+        self.cap = cv2.VideoCapture(0) # временно!
+
+    def read(self):
+        return self.__currentImage
+
+    def acceptImage(self):
+        _, image = self.cap.read()
+
+        return image
+
+    def run(self):
+        # получение данных
+        try:
+            self.__currentImage = acceptImage()
+        except:
+            print("данные с камеры не получены!")

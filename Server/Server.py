@@ -22,7 +22,6 @@ class Server(QObject):
         self.__socket = socketServer(self.__address, port, numClients)
         self.__socket.start()
 
-        # self.runServer.emit(self.__nameHost, "192.168.3.2")
         self.runServer.emit(self.__nameHost, self.__address)
 
     # обратиться к сокету сервера
@@ -32,6 +31,5 @@ class Server(QObject):
     # выключить сервер
     def stop(self):
         self.__socket.stop()
-        del self.__socket
-        # self.__socket.join()
+        # del self.__socket
 

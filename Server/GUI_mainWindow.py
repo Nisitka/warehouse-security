@@ -259,6 +259,22 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.gifServer.jumpToFrame(2)
         self.gifServer.stop()
 
+        # кнопка "отсоединить всех" в клиентах охраны
+        self.closeAllGuardClientButton.setStyleSheet('''
+                                            QPushButton {
+                                                background-color: rgb(255,255,255); color: rgb(0,0,0);
+
+                                                border-style: outset;
+                                                border-radius: 3px;
+                                                border-width: 1px;
+                                                border-color: rgb(0,0,0);
+                                            }
+                                            QPushButton:hover {
+                                                background-color : rgb(224,0,0); color: rgb(104,0,0);
+                                                border-color: rgb(0,0,0);
+                                            }
+                                        ''')
+
     # установка визуала клиентов
     def __setGuardClients(self):
         self.guardsTableWidget.setColumnCount(2)
