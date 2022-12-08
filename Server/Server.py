@@ -31,5 +31,5 @@ class Server(QObject):
     # выключить сервер
     def stop(self):
         self.__socket.stop()
-        # del self.__socket
+        del self.__socket
 

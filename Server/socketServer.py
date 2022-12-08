@@ -40,7 +40,8 @@ class socketServer(QObject, Thread):
 
         self.__address = address
         self.__port = port_
-        self.__serverSocket = socketNetwork.socket()
+        self.__serverSocket = socketNetwork.socket(socketNetwork.AF_INET, socketNetwork.SOCK_STREAM)
+        self.__serverSocket.setsockopt(socketNetwork.SOL_SOCKET, socketNetwork.SO_REUSEADDR, 1)
 
         # запуск сервера(сокета) для принятия соединений на
         # соотвествующий адресс и порт
@@ -144,6 +145,7 @@ class socketServer(QObject, Thread):
         # выходим из ожидания подключения клиента
         self.__working = False
 
+        self.__serverSocket.shutdown(socketNetwork.SHUT_RDWR)
         self.__serverSocket.close()  # выключаем сокет сервера
         self.__offClients()
 
