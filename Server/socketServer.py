@@ -4,7 +4,8 @@ from PyQt5.QtCore import QObject, pyqtSignal
 from threading import Thread
 import socket as socketNetwork
 
-from Client import threadClient
+from Client import guardClient
+from Client import typeClient
 
 import codecs
 from sendersData import senderViideo
@@ -12,14 +13,16 @@ from sendersData import senderViideo
 import cv2  # это временно!!!
 
 class socketServer(QObject, Thread):
-    # список клиентов
-    __Clients = []
-
-    # список отправщиков видео
-    __sendersVideo = []
-
+    # Сигналы:
     # запрос на подключение
     requestConnection = pyqtSignal(str, str, str)  # имя, пароль и адрес клиента
+    # инфа об удалении клиента
+    delClient = pyqtSignal(str, int)  # логин и тип клиента
+
+    # список клиентов
+    __Clients = []
+    # список отправщиков видео
+    __sendersVideo = []
 
     # переменные для временного хранения очередного подключения
     __newConnection = "сокет"
@@ -70,8 +73,8 @@ class socketServer(QObject, Thread):
     def addNewClient(self, login):
         print("client add!")
 
-        # добавляем в список клиентов
-        self.__Clients.append(threadClient(self.__newConnection, self.__newClientAddress, login))
+        # добавляем в список клиентов нового клиента
+        self.__Clients.append(guardClient(self.__newConnection, self.__newClientAddress, login))
 
         # информируем об удачной инициализации
         self.sendTextData(self.__Clients[-1].getSocket(), "initSuccessfully")
@@ -83,22 +86,19 @@ class socketServer(QObject, Thread):
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)  # временно!
 
+        # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
         newSender = senderViideo(self.cap, self.__Clients[-1])
-        newSender.disabled[str].connect(self.disconnectClient)
+        newSender.disabled[str, int].connect(self.disconnectClient)
         newSender.start()
-        '''
-        self.sendImagesData()
-        while True:
-            dataUser = self.waitData()
-            if (dataUser == "Get"):
-                self.sendImagesData()
-        '''
 
-    def disconnectClient(self, login):
-        print("AAAAAAAAAA")
-        for guardClient in self.__Clients:
-            if str(guardClient.getLoginGuard()) == login:
-                guardClient.remove()
+    def disconnectClient(self, login, tClient):
+
+        if (tClient == typeClient.Guard.value):
+            for guardClient in self.__Clients:
+                if str(guardClient.getLoginGuard()) == login:
+                    guardClient.remove()  # разрушаем экземпляр клиента
+                    self.__Clients.remove(guardClient)  # удаляем его из списка клиентов
+                    self.delClient.emit(login, typeClient.Guard.value)  # сообщаем об удалении
 
     def lockNewClient(self):
         print("client lock!")
@@ -115,8 +115,6 @@ class socketServer(QObject, Thread):
                 break
             else:
                 return dataUser
-
-
 
     # отправка данных через указанный сокет (кому, что)
     def sendTextData(self, socket, data):

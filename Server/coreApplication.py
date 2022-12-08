@@ -51,6 +51,12 @@ class Core(QObject):
         # сокет запрашивает разрешение на поключение клиента
         self.__server.getSocket().requestConnection[str, str, str].connect(self.initClient)
 
+        # сокет сообщает ядру об удалении клиента
+        self.__server.getSocket().delClient[str, int].connect(self.deleteClient)
+
+    def deleteClient(self, login, type):
+        self.__gui.deleteClient(login, type)
+
     def __authorizationClient(self, login, address):
         self.__server.getSocket().addNewClient(login)
 

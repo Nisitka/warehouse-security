@@ -28,7 +28,7 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         super().__init__()
         self.setupUi(self) # для инициализации нашего дизайна
         
-        self.setWindowTitle("securityMaster")
+        self.setWindowTitle("securityMaster!")
         
         self.timerCurrentTime = QTimer()
         self.timerCurrentTime.timeout.connect(self.updateTime)

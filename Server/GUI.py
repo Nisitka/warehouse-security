@@ -5,13 +5,14 @@
 '''
 
 # главное окно
-# from mainWindow import guiMainWindow
 from GUI_mainWindow import mainWindow
 
 # окно редакции клиента
 from clientWindow import guiClientWindow
 
 from PyQt5.QtCore import QObject, pyqtSignal
+
+from Client import typeClient
 
 class guiApplication(QObject):
 
@@ -31,6 +32,9 @@ class guiApplication(QObject):
         for i in range(0, 10):
             self.showClient(i)
         '''
+
+    def deleteClient(self, login, type):
+        self.__mainWin.delClient(login, type)
 
     def getMainWindow(self):
         return self.__mainWin

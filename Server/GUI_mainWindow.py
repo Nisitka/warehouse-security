@@ -1,3 +1,5 @@
+from PyQt5 import QtWidgets
+
 # главное окно
 import mainWindowGui
 
@@ -7,6 +9,8 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem
 
 from PyQt5.QtCore import QObject, pyqtSignal
+
+from Client import typeClient
 
 import datetime
 
@@ -31,9 +35,26 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.__setBackground()
         self.__setTabBar()
         self.__setServer()
-        self.__setClients()
+        self.__setGuardClients()
         self.__setNeuralNet()
         self.__setToolBoxSettings()
+
+    def delClient(self, login, type):
+        print(str(login) + " " + str(type))
+
+        # выбираем таблицу
+        if (type == typeClient.Guard.value):
+            table = self.guardsTableWidget
+
+        # находим строку с эти логином и очищаем её
+        row = 0
+        while row <= table.rowCount():
+            if table.item(row, 0).text() == login:
+                table.removeRow(row)
+                break
+            row += 1
+
+        self.__appendInfoWindow("Соединение с клиентом \"" + login + "\" разорвано")
 
     # установка фона
     def __setBackground(self):
@@ -98,12 +119,6 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
 
         self.__setStartButton()
 
-    def __setClientsTable(self):
-        self.clientsTableWidget.setColumnCount(2)
-
-        self.clientsTableWidget.setHorizontalHeaderLabels(["Имя клиента", "Адрес"])
-        self.clientsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-
     def __setToolBoxSettings(self):
         self.settingsToolBox.setStyleSheet("""
                  QToolBox::tab {
@@ -126,18 +141,18 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.__appendInfoWindow("Подключен новый клиент (" + name + ")")
 
     def __clientToTable(self, name, address):
-        self.clientsTableWidget.setRowCount(self.clientsTableWidget.rowCount() + 1)
+        self.guardsTableWidget.setRowCount(self.guardsTableWidget.rowCount() + 1)
 
-        self.clientsTableWidget.setItem(self.clientsTableWidget.rowCount() - 1, 0, QTableWidgetItem(name))
-        self.clientsTableWidget.setItem(self.clientsTableWidget.rowCount() - 1, 1, QTableWidgetItem(address))
+        self.guardsTableWidget.setItem(self.guardsTableWidget.rowCount() - 1, 0, QTableWidgetItem(name))
+        self.guardsTableWidget.setItem(self.guardsTableWidget.rowCount() - 1, 1, QTableWidgetItem(address))
 
     def __clearClientsTable(self):
-        while (self.clientsTableWidget.rowCount() > 0):
-            self.clientsTableWidget.removeRow(0)
+        while (self.guardsTableWidget.rowCount() > 0):
+            self.guardsTableWidget.removeRow(0)
 
     def setInfoServer(self, nameHost, IP):
         # установить пар-ры сокета сервера
-        self.hostLabel.setText("Хост!!!!!: " + nameHost)
+        self.hostLabel.setText("Хост: " + nameHost)
         self.IPLabel.setText("IPv4-адрес: " + IP)
 
         # выдать информацию в инф. табло
@@ -169,7 +184,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.numClientsLineEdit.setEnabled(False)
 
         # разблокирование таблицы с клиентами
-        self.clientsTableWidget.setEnabled(True)
+        self.guardsTableWidget.setEnabled(True)
 
     def stopServer(self):
         self.__serverWorking = False
@@ -188,7 +203,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
 
         # очистка полей таблицы от клиентов и блокировка таблицы
         self.__clearClientsTable()
-        self.clientsTableWidget.setEnabled(False)
+        self.guardsTableWidget.setEnabled(False)
 
     # установка визуала кнопки запуска\остановки сервера
     def __setStartButton(self):
@@ -245,13 +260,13 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.gifServer.stop()
 
     # установка визуала клиентов
-    def __setClients(self):
-        self.clientsTableWidget.setColumnCount(2)
-        self.clientsTableWidget.setHorizontalHeaderLabels(["Имя клиента", "Адрес"])
-        self.clientsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+    def __setGuardClients(self):
+        self.guardsTableWidget.setColumnCount(2)
+        self.guardsTableWidget.setHorizontalHeaderLabels(["Логин клиента", "Адрес"])
+        self.guardsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
 
         # блокировка таблицы до включения сервера
-        self.clientsTableWidget.setEnabled(False)
+        self.guardsTableWidget.setEnabled(False)
 
     def __setNeuralNet(self):
         #  гифка для нейронной сети

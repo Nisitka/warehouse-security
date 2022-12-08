@@ -80,7 +80,8 @@ class Socket(QObject, Thread):
 
             self.importData.emit(pix, pix)
 
-        message = "Get"  #
+        # сообщаем о том, что готовы к след. изображению
+        message = "Get"
         for i in range(5):
             self.__clientSocket.sendall(message.encode("utf-8"))
 

@@ -4,20 +4,27 @@ from threading import Thread
 import datetime
 import codecs
 
-class threadClient(QObject, Thread):
-    # при получении данных
-    getData = pyqtSignal(list, str)  # отправка принятого массива данных и комментария
+import enum
 
-    hVideo = 480
-    wVideo = 640
-    dataPackageSize = hVideo * wVideo * 3
-    # dataPackageSize = 2048 * 1000 * 1000
+# типы клиентов
+class typeClient(enum.Enum):
+    Guard = 1
+    Barrier = 2
 
-    def __init__(self, socket_, address_, loginGuard):
+print(typeClient.Guard.value)
+
+class guardClient(QObject, Thread):
+    # сигналы:
+    # информируем об прекращении функционирования
+    # destroyed = pyqtSignal(str, int)  # логин, тип клиента
+
+    dataPackageSize = 2048 * 1000 * 1000
+
+    def __init__(self, socket_, address_, loginGuard_):
         QObject.__init__(self)
         Thread.__init__(self)
 
-        self.__loginGuard = loginGuard
+        self.__loginGuard = loginGuard_
 
         self.__socket = socket_
         self.__address = address_
@@ -41,7 +48,10 @@ class threadClient(QObject, Thread):
 
     def __waitData(self):
         while(self.__working):
-            data = self.__socket.recv(self.dataPackageSize)
+            try:
+                data = self.__socket.recv(self.dataPackageSize)
+            except:
+                print("не удалось получить данные")
 
             if not data:
                 print("данные не переданы!")
@@ -50,7 +60,8 @@ class threadClient(QObject, Thread):
         self.__stopGetData()
         self.__socket.close()
 
-        print("Клиент удален!!!!!")
+        # self.destroyed.emit(str(self.__loginGuard), typeClient.Guard.value)
+        print("Клиент удален!")
 
     def getLoginGuard(self):
         return self.__loginGuard
