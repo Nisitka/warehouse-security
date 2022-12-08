@@ -101,7 +101,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
     def __setClientsTable(self):
         self.clientsTableWidget.setColumnCount(2)
 
-        self.clientsTableWidget.setHorizontalHeaderLabels(["Логин клиента", "Адрес"])
+        self.clientsTableWidget.setHorizontalHeaderLabels(["Имя клиента", "Адрес"])
         self.clientsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
 
     def __setToolBoxSettings(self):
@@ -137,7 +137,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
 
     def setInfoServer(self, nameHost, IP):
         # установить пар-ры сокета сервера
-        self.hostLabel.setText("Хост: " + nameHost)
+        self.hostLabel.setText("Хост!!!: " + nameHost)
         self.IPLabel.setText("IPv4-адрес: " + IP)
 
         # выдать информацию в инф. табло
