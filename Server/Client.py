@@ -50,7 +50,7 @@ class threadClient(QObject, Thread):
         self.__stopGetData()
         self.__socket.close()
 
-        print("Клиент удален!")
+        print("Клиент удален!!!!!")
 
     def getLoginGuard(self):
         return self.__loginGuard
