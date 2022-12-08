@@ -137,7 +137,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
 
     def setInfoServer(self, nameHost, IP):
         # установить пар-ры сокета сервера
-        self.hostLabel.setText("Хост!!!: " + nameHost)
+        self.hostLabel.setText("Хост!!!!!: " + nameHost)
         self.IPLabel.setText("IPv4-адрес: " + IP)
 
         # выдать информацию в инф. табло
