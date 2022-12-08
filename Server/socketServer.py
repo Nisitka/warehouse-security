@@ -15,6 +15,9 @@ class socketServer(QObject, Thread):
     # список клиентов
     __Clients = []
 
+    # список отправщиков видео
+    __sendersVideo = []
+
     # запрос на подключение
     requestConnection = pyqtSignal(str, str, str)  # имя, пароль и адрес клиента
 
@@ -64,11 +67,11 @@ class socketServer(QObject, Thread):
 
         print("Server stopped")
 
-    def addNewClient(self):
+    def addNewClient(self, login):
         print("client add!")
 
         # добавляем в список клиентов
-        self.__Clients.append(threadClient(self.__newConnection, self.__newClientAddress))
+        self.__Clients.append(threadClient(self.__newConnection, self.__newClientAddress, login))
 
         # информируем об удачной инициализации
         self.sendTextData(self.__Clients[-1].getSocket(), "initSuccessfully")
@@ -80,8 +83,9 @@ class socketServer(QObject, Thread):
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)  # временно!
 
-        sender = senderViideo(self.cap, self.__Clients[-1].getSocket())
-        sender.start()
+        newSender = senderViideo(self.cap, self.__Clients[-1])
+        newSender.disabled[str].connect(self.disconnectClient)
+        newSender.start()
         '''
         self.sendImagesData()
         while True:
@@ -90,20 +94,18 @@ class socketServer(QObject, Thread):
                 self.sendImagesData()
         '''
 
+    def disconnectClient(self, login):
+        print("AAAAAAAAAA")
+        for guardClient in self.__Clients:
+            if str(guardClient.getLoginGuard()) == login:
+                guardClient.remove()
+
     def lockNewClient(self):
         print("client lock!")
 
         # информируем об неудачной попытке инициализации
         self.sendTextData(self.__newConnection, "initFail")
         self.__newConnection.close()
-
-    def sendImagesData(self):
-        _, image = self.cap.read()  # потом это будет инфа с сервера
-        image = cv2.resize(image, dsize=(640, 480))
-
-        outArr = image.reshape((-1,))
-
-        self.__Clients[-1].getSocket().sendall(outArr)
 
     def waitData(self):
         while True:

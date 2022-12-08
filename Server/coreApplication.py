@@ -51,9 +51,11 @@ class Core(QObject):
         # сокет запрашивает разрешение на поключение клиента
         self.__server.getSocket().requestConnection[str, str, str].connect(self.initClient)
 
-    def __authorizationClient(self, name, address):
-        self.__server.getSocket().addNewClient()
-        self.__gui.getMainWindow().addNewClient(name, address)
+    def __authorizationClient(self, login, address):
+        self.__server.getSocket().addNewClient(login)
+
+        # отображаем об этом информацию в интерфейсе
+        self.__gui.getMainWindow().addNewClient(login, address)
 
     def __blockingClient(self):
         self.__server.getSocket().lockNewClient()

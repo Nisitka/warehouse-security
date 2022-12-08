@@ -103,7 +103,7 @@ class guiMainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
     def __setClientsTable(self):
         self.clientsTableWidget.setColumnCount(2)
 
-        self.clientsTableWidget.setHorizontalHeaderLabels(["Имя клиента", "Адрес"])
+        self.clientsTableWidget.setHorizontalHeaderLabels(["Логин клиента", "Адрес"])
         self.clientsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
 
     def __setToolBoxSettings(self):

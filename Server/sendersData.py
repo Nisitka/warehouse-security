@@ -5,13 +5,14 @@ from PyQt5.QtCore import QObject, pyqtSignal
 import cv2
 
 class senderViideo(QObject, Thread):
+    disabled = pyqtSignal(str)  # информируем об разрыве соединения
 
-    def __init__(self, camera, socketGuard):
+    def __init__(self, camera, clientGuard):
         QObject.__init__(self)
         Thread.__init__(self)
 
         self.cap = camera
-        self.clientSocket = socketGuard
+        self.__clientGuard = clientGuard
 
     def run(self):
         self.sendImagesData()
@@ -26,12 +27,21 @@ class senderViideo(QObject, Thread):
 
         outArr = image.reshape((-1,))
 
-        self.clientSocket.sendall(outArr)
+        try:
+            self.__clientGuard.getSocket().sendall(outArr)
+        except:
+            print("соединение разорвано1")
+            self.disabled.emit(str(self.__clientGuard.getLoginGuard()))
 
     def waitData(self):
         while True:
-            dataUser = self.clientSocket.recv(200)
-            dataUser = dataUser.decode("utf-8")
+            try:
+                dataUser = self.__clientGuard.getSocket().recv(200)
+                dataUser = dataUser.decode("utf-8")
+            except:
+                print("соединение разорвано2")
+                self.disabled.emit(str(self.__clientGuard.getLoginGuard()))
+
             if not dataUser:
                 break
             else:

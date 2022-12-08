@@ -8,11 +8,16 @@ class threadClient(QObject, Thread):
     # при получении данных
     getData = pyqtSignal(list, str)  # отправка принятого массива данных и комментария
 
-    dataPackageSize = 2048 * 1000 * 1000
+    hVideo = 480
+    wVideo = 640
+    dataPackageSize = hVideo * wVideo * 3
+    # dataPackageSize = 2048 * 1000 * 1000
 
-    def __init__(self, socket_, address_):
+    def __init__(self, socket_, address_, loginGuard):
         QObject.__init__(self)
         Thread.__init__(self)
+
+        self.__loginGuard = loginGuard
 
         self.__socket = socket_
         self.__address = address_
@@ -44,3 +49,8 @@ class threadClient(QObject, Thread):
     def remove(self):
         self.__stopGetData()
         self.__socket.close()
+
+        print("Клиент удален!")
+
+    def getLoginGuard(self):
+        return self.__loginGuard
