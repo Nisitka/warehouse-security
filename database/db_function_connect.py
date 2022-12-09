@@ -1,7 +1,6 @@
 import sqlite3
 import hashlib
 class dbConnect:
-# разобраться с подключением/отключением к бд через функцию
 
     def connectionOpen():
         connection = sqlite3.connect('db.sqlite3')  # подключение к бд
@@ -14,8 +13,7 @@ class dbConnect:
         connection.close()
 
 
-    def array_creator(self, array_of_values):  # функция перегона кортежа в массив (fetchall выводит все в виде кортежа-
-        # иногда неудобно работать)
+    def array_creator(self, array_of_values):  # функция перегона кортежа в массив 
         temp_storage = array_of_values
         array_of_values = []
         for value in temp_storage:
@@ -92,7 +90,7 @@ class dbConnect:
             return('TRUE')
         else:
             return('FALSE')
-# наверное нужно будет сделать какой-нибудь хешер для паролей, чтобы они не хранились в явной форме в бд
+
 
 
     def camera_select(security_id):  # функция для выборки id камер по id охранника (сначала камера ворот, потом- шлагбаума), можно обратиться по индексам 0 и 1 соответственно
