@@ -3,9 +3,11 @@ from PyQt5.QtCore import QObject, pyqtSignal
 import sqlite3
 from sqlite3 import Error
 
+from Client import typeClient
+
 class dataBase(QObject):
 
-    authorizationClient = pyqtSignal(str, str)
+    authorizationClient = pyqtSignal(str, str, int)
     blockingClient = pyqtSignal()
 
     def __init__(self):
@@ -51,8 +53,14 @@ class dataBase(QObject):
     def initClient(self, login, password, address):
         print("инициализация в базе данных")
 
-        if (password == "123"):
-            name = login  # имя и логин потом не будут соотвествовать (из бд будет браться имя)
-            self.authorizationClient.emit(name, address)
+        # при получении особого шифра вместо пароля мы понимаем что это камера
+        if password == "f8o13_vn2fk84ds_43f":
+            print("присоединение камеры!")
+            self.authorizationClient.emit(login, address, typeClient.Guard.value)
+
         else:
-            self.blockingClient.emit()
+            print("присоединение охранника!")
+            if (password == "123"):
+                self.authorizationClient.emit(login, address, typeClient.Guard.value)
+            else:
+                self.blockingClient.emit()

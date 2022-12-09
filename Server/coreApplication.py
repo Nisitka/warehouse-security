@@ -34,7 +34,7 @@ class Core(QObject):
         self.__gui.getMainWindow().stopServerSignal.connect(self.stopServer)
 
         # ответы базы данных на запрос от сервера
-        self.__DataBase.authorizationClient[str, str].connect(self.__authorizationClient)
+        self.__DataBase.authorizationClient[str, str, int].connect(self.__authorizationClient)
         self.__DataBase.blockingClient.connect(self.__blockingClient)
 
     def startServer(self, port, numClients):
@@ -49,7 +49,7 @@ class Core(QObject):
         self.__server.run(port, numClients)
 
         # сокет запрашивает разрешение на поключение клиента
-        self.__server.getSocket().requestConnectionGuard[str, str, str].connect(self.initClient)
+        self.__server.getSocket().requestConnectionClient[str, str, str].connect(self.initClient)
 
         # сокет сообщает ядру об удалении клиента
         self.__server.getSocket().delClient[str, int].connect(self.deleteClient)
@@ -57,8 +57,10 @@ class Core(QObject):
     def deleteClient(self, login, type):
         self.__gui.deleteClient(login, type)
 
-    def __authorizationClient(self, login, address):
-        self.__server.getSocket().addNewClient(login)
+    # авторизация клиента по типу (охранник или камера)
+    def __authorizationClient(self, login, address, typeClient):
+        # добаляем клиента в обработку сервером
+        self.__server.getSocket().addNewClient(login, typeClient)
 
         # отображаем об этом информацию в интерфейсе
         self.__gui.getMainWindow().addNewClient(login, address)

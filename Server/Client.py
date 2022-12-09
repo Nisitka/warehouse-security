@@ -34,7 +34,7 @@ class guardClient(QObject, Thread):
     def run(self):
         self.__working = True
 
-        self.__waitData()
+        # self.__waitData()
 
     def getSocket(self):
         return self.__socket
@@ -76,18 +76,18 @@ class cameraClient(QObject, Thread):
 
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0) # временно!
+        _, self.__currentImage = self.cap.read()
 
     def read(self):
         return self.__currentImage
 
     def acceptImage(self):
-        _, image = self.cap.read()
-
-        return image
+        _, self.__currentImage = self.cap.read()
 
     def run(self):
         # получение данных
-        try:
-            self.__currentImage = acceptImage()
-        except:
-            print("данные с камеры не получены!")
+        while True:
+            try:
+                self.acceptImage()
+            except:
+                print("данные с камеры не получены!")

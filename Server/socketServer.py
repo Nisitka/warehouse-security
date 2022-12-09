@@ -15,10 +15,8 @@ import sys
 
 class socketServer(QObject, Thread):
     # Сигналы:
-    # запрос на подключение клиента-охранника
-    requestConnectionGuard = pyqtSignal(str, str, str)  # логин, пароль и адрес клиента
-    # запрос на подключение клиента-камеры
-    requestConnectionCamera = pyqtSignal(str, str)  # логин и адрес клиента
+    # запрос на подключение клиента
+    requestConnectionClient = pyqtSignal(str, str, str)  # логин, пароль и адрес клиента
 
     # инфа об удалении клиента
     delClient = pyqtSignal(str, int)  # логин и тип клиента
@@ -26,7 +24,7 @@ class socketServer(QObject, Thread):
     # список клиентов-охранников
     __GuardClients = []
     # список камер
-    __Camers = []
+    __CameraClients = []
     # список отправщиков видео
     __sendersVideo = []
 
@@ -75,36 +73,57 @@ class socketServer(QObject, Thread):
             except:
                 break
             login, password = self.__decodeUserData()
-            # при получении особого шифра вместо пароля мы понимаем что это камера
-            if password == "f8o13_vn2fk84ds_43f":
-                print("присоединение камеры!")
-
-            else:
-                # аутентификация
-                self.requestConnectionGuard.emit(login, password, str(self.__newClientAddress))
+            # аутентификация
+            self.requestConnectionClient.emit(login, password, str(self.__newClientAddress))
 
         sys.exit()
 
-    def addNewClient(self, login):
-        print("client add!")
+    def addNewClient(self, login, tClient):
+        print("client add! " + str(tClient))
 
-        # добавляем в список клиентов нового клиента
-        self.__GuardClients.append(guardClient(self.__newConnection, self.__newClientAddress, login))
+        # если клиент не охранник, то значит камера
+        if (tClient == typeClient.Guard.value):
+            # добавляем в список клиентов-охранников нового клиента
+            self.__GuardClients.append(guardClient(self.__newConnection, self.__newClientAddress, login))
 
-        # информируем об удачной инициализации
-        self.sendTextData(self.__GuardClients[-1].getSocket(), "initSuccessfully")
+            # информируем об удачной инициализации ПО охранника
+            self.sendTextData(self.__GuardClients[-1].getSocket(), "initSuccessfully")
 
-        # дожидаемся готовности клиента и только тогда начинаем транслировать видео
-        data = self.waitData()
-        print(data)
+            # дожидаемся готовности клиента и только тогда отправляем инфу об камерах
+            data = self.waitData(self.__GuardClients[-1].getSocket())
+            print(data)
 
-        # создать новый объект камеру
-        self.cap = cv2.VideoCapture(0)  # временно!
+            # если камеры, которые может видеть охранник есть, то:
+            readyCameras = True
+            if (readyCameras):
+                self.sendTextData(self.__GuardClients[-1].getSocket(), "readyCameras")
 
-        # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
-        newSender = senderViideo(self.cap, self.__GuardClients[-1])
-        newSender.disabled[str, int].connect(self.disconnectClient)
-        newSender.start()
+                # дожидаемся ответа кдиента об принятии инфы об камерах
+                data = self.waitData(self.__GuardClients[-1].getSocket())
+                print(data)
+
+                # отправляем запрос на отправку видео
+                self.sendTextData(self.__GuardClients[-1].getSocket(), "sendVideo")
+
+                # результат запроса (в этот момент клиент готов принимать карнинки)
+                data = self.waitData(self.__GuardClients[-1].getSocket())
+                print(data)
+                if (data == "readyGetVideo"):
+                    cap = cameraClient("socket", "login")  # временно!
+                    cap.start()
+
+                    # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
+                    newSender = senderViideo(cap, self.__GuardClients[-1])
+                    newSender.disabled[str, int].connect(self.disconnectClient)
+                    newSender.start()
+
+            else:
+                # информируем ПО охранника об отсутствии подключенных разрешенных камер
+                self.sendTextData(self.__GuardClients[-1].getSocket(), "notCameras")
+
+        else:
+            # добаляем камеру в общий список подкл. камер
+            self.__CameraClients.append(cameraClient(self.__newConnection, login))
 
     def disconnectClient(self, login, tClient):
 
@@ -120,11 +139,13 @@ class socketServer(QObject, Thread):
 
         # информируем об неудачной попытке инициализации
         self.sendTextData(self.__newConnection, "initFail")
-        self.__newConnection.close()
 
-    def waitData(self):
+        # отключаем этого клиента
+        self.__closeSocket(self.__newConnection)
+
+    def waitData(self, socket):
         while True:
-            dataUser = self.__newConnection.recv(200)
+            dataUser = socket.recv(512)
             dataUser = dataUser.decode("utf-8")
             if not dataUser:
                 break
@@ -141,17 +162,20 @@ class socketServer(QObject, Thread):
                 self.__GuardClients[i].remove()
             self.__GuardClients.clear()  # очищаем список клиентов
 
-    def stop(self):
-        # выходим из ожидания подключения клиента
-        self.__working = False
-
+    def __closeSocket(self, socket):
         try:
-            self.__serverSocket.shutdown(socketNetwork.SHUT_RDWR)
+            socket.shutdown(socketNetwork.SHUT_RDWR)
             print("Это Linux")
         except:
             print("Это windows детка")
 
-        self.__serverSocket.close()  # выключаем сокет сервера
+        socket.close()  # отключаем сокет
+
+    def stop(self):
+        # выходим из ожидания подключения клиента
+        self.__working = False
+
+        self.__closeSocket(self.__serverSocket)  # выключаем сокет сервера
         self.__offClients()
 
         print("сервер отключен!")

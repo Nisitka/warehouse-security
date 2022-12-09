@@ -23,6 +23,7 @@ class senderViideo(QObject, Thread):
     def run(self):
         self.sendImagesData()
         while self.work:
+            # ждем инфы об принятии файла
             dataUser = self.waitData()
             if (dataUser == "Get"):
                 self.sendImagesData()
@@ -31,13 +32,15 @@ class senderViideo(QObject, Thread):
         sys.exit()
 
     def sendImagesData(self):
-        _, image = self.cap.read()  # потом это будет инфа с сервера
+        # print("send")
+        image = self.cap.read()
         image = cv2.resize(image, dsize=(640, 480))
 
+        # преобразуем в одномерный numpy массив
         outArr = image.reshape((-1,))
 
         try:
-            self.__clientGuard.getSocket().sendall(outArr)
+            self.__clientGuard.getSocket().send(outArr)
         except:
             print("соединение разорвано1")
             self.disabled.emit(str(self.__clientGuard.getLoginGuard()), typeClient.Guard.value)

@@ -26,11 +26,17 @@ class Core(QObject):
         self.netModule = Socket()
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.importData[QPixmap, QPixmap].connect(self.getDataServer)
+        self.netModule.startAcceptVideo.connect(self.acceptVideo)
+
+    def acceptVideo(self):
+        print("start accept video!")
+        # запускаем модуль сетевого соединения (в отдельном потоке)
+        self.netModule.start()
 
     def authorizationUser(self, key):
         if (key):
             # запускаем модуль сетевого соединения (в отдельном потоке)
-            self.netModule.start()
+            # self.netModule.start()
 
             # открываем главное окно интерфейса
             self.guiApp.showMainWin()
