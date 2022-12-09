@@ -1,0 +1,1 @@
+pyuic5 D:\Programming\warehouse-security\clientCamera\gui.ui -o D:\Programming\warehouse-security\clientCamera\guiUI.py
