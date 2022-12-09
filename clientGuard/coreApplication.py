@@ -4,6 +4,8 @@ from networkModule import Socket
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap
 
+from PyQt5.QtWidgets import QMessageBox
+
 class Core(QObject):
     # run = pyqtSignal()
 
@@ -27,6 +29,10 @@ class Core(QObject):
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.importData[QPixmap, QPixmap].connect(self.getDataServer)
         self.netModule.startAcceptVideo.connect(self.acceptVideo)
+        self.netModule.disconnectServer.connect(self.eventDisconnectServer)
+
+    def eventDisconnectServer(self):
+        self.guiApp.mainWin.eventDisconnectServer()
 
     def acceptVideo(self):
         print("start accept video!")
@@ -43,10 +49,13 @@ class Core(QObject):
             # закрываем окно авторизации
             self.guiApp.closeInitUserWin()
         else:
-            print("Неверный логин или пароль")
+            QMessageBox.about(self.guiApp.initUserWin, "ошибка аутентификации: ", "Неверный логин или пароль!")
 
     def autheUser(self, host, port, login, password):
-        self.netModule.connectServer(host, port, login, password)
+        try:
+            self.netModule.connectServer(host, port, login, password)
+        except:
+            QMessageBox.about(self.guiApp.initUserWin, "ошибка аутентификации: ", "Cервер по такому адресу не запущен!")
 
     def getDataServer(self, imagePeople, imageCar):
         self.guiApp.mainWin.updateVideoBarrier(imagePeople)

@@ -16,10 +16,18 @@ import json
 
 class Socket(QObject, Thread):
     importData = pyqtSignal(QPixmap, QPixmap)
-    initUserInfo = pyqtSignal(bool) # результат авторизации пользователя
-    initCamerasInfo = pyqtSignal(bool)  # результы поиска разрешенных камер
 
+    # результат авторизации пользователя
+    initUserInfo = pyqtSignal(bool)
+
+    # результы поиска разрешенных камер
+    initCamerasInfo = pyqtSignal(bool)
+
+    # запрос ядру на принятие изображений с сервера
     startAcceptVideo = pyqtSignal()
+
+    # сообщаем ядру о потери соединения
+    disconnectServer = pyqtSignal()
 
     hVideo = 480
     wVideo = 640
@@ -68,7 +76,6 @@ class Socket(QObject, Thread):
                 # подготовка к принятию видео
 
                 # запускаем прием видео
-                # self.run()
                 self.startAcceptVideo.emit()
 
             else:
@@ -78,6 +85,7 @@ class Socket(QObject, Thread):
             # информиркем ядро приложения об результатах аутентификации
             self.initUserInfo.emit(False)
 
+    # получение изображений от сервера
     def run(self):
         # сообщаем об готовности принимать видео
         self.sendTextData("readyGetVideo")
@@ -86,32 +94,38 @@ class Socket(QObject, Thread):
         while self.__working:
             self.getDataServer()
 
-        print("Сетевой модуль выключен!")
+        print("Принятие изображений прекращено!")
 
     def getDataServer(self):
-        data = self.__clientSocket.recv(self.dataPackageSize + 10)  # self.dataPackageSize
-        # print(len(list(data)))
+        try:
+            data = self.__clientSocket.recv(self.dataPackageSize + 10)
+            data = list(data)
 
-        # data = self.waitDataImage()
+            if (len(data) != self.dataPackageSize):
+                print("потеря данных!")
 
-        data = list(data)
-        if (len(data) != self.dataPackageSize):
-            print("потеря данных!")
+                # запрос следующего изображения
+                self.sendTextData("Get")
+            else:
+                # print("accept!")
+                npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
+                cv2.imwrite("img1.jpg", npImage)
+                cv2.imwrite("img2.jpg", npImage)
 
-            # запрос следующего изображения
-            self.sendTextData("Get")
-        else:
-            # print("accept!")
-            npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
-            cv2.imwrite("img1.jpg", npImage)
-            cv2.imwrite("img2.jpg", npImage)
+                pix = QPixmap("img1.jpg")
 
-            pix = QPixmap("img1.jpg")
+                self.importData.emit(pix, pix)
 
-            self.importData.emit(pix, pix)
+                # сообщаем о том, что готовы к след. изображению
+                self.sendTextData("Get")
 
-            # сообщаем о том, что готовы к след. изображению
-            self.sendTextData("Get")
+        except:
+            print("соединение с сервером потеряно!")
+            # сообщаем ядру об потери соединения
+            self.disconnectServer.emit()
+
+            # прекращаем получение данных
+            self.__working = False
 
     def sendTextData(self, textMessage):
         self.__clientSocket.sendall(textMessage.encode("utf-8"))
@@ -125,21 +139,6 @@ class Socket(QObject, Thread):
                 break
             else:
                 return dataServer
-
-    def waitDataImage(self):
-        while True:
-            try:
-                data = self.__clientSocket.recv(self.dataPackageSize + 10)
-            except:
-                print("соединение разорвано2")
-                self.work = False
-                return
-
-            if not data:
-                print("not data!")
-                break
-            else:
-                return data
 
     def stop(self):
         self.__working = False

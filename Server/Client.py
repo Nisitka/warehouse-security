@@ -8,6 +8,9 @@ import enum
 
 import cv2  # это временно!!!
 
+import os
+import sys
+
 # типы клиентов
 class typeClient(enum.Enum):
     Guard = 1
@@ -78,6 +81,11 @@ class cameraClient(QObject, Thread):
         self.cap = cv2.VideoCapture(0) # временно!
         _, self.__currentImage = self.cap.read()
 
+        self.__work = True
+
+    def remove(self):
+        self.__work = False
+
     def read(self):
         return self.__currentImage
 
@@ -86,8 +94,12 @@ class cameraClient(QObject, Thread):
 
     def run(self):
         # получение данных
-        while True:
+        while self.__work:
             try:
                 self.acceptImage()
+
             except:
                 print("данные с камеры не получены!")
+
+        print("получение данных с камеры прекращено")
+        sys.exit()

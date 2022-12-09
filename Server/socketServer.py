@@ -109,8 +109,13 @@ class socketServer(QObject, Thread):
                 data = self.waitData(self.__GuardClients[-1].getSocket())
                 print(data)
                 if (data == "readyGetVideo"):
-                    cap = cameraClient("socket", "login")  # временно!
-                    cap.start()
+
+                    # _________временно!__________________
+                    cap = cameraClient("socket", "login")
+                    cap.start()  # запуск получения данных
+                    # добавление в спиское камер
+                    self.__CameraClients.append(cap)
+                    # ____________________________________
 
                     # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
                     newSender = senderViideo(cap, self.__GuardClients[-1])
@@ -158,9 +163,20 @@ class socketServer(QObject, Thread):
 
     def __offClients(self):
         if (len(self.__GuardClients) > 0):
-            for i in range(len(self.__Clients)):
+            # разрушаем каждоного клиента
+            for i in range(len(self.__GuardClients)):
                 self.__GuardClients[i].remove()
-            self.__GuardClients.clear()  # очищаем список клиентов
+
+            # очищаем список клиентов
+            self.__GuardClients.clear()
+
+        if (len(self.__CameraClients) > 0):
+            # разрушаем каждоного клиента
+            for i in range(len(self.__CameraClients)):
+                self.__CameraClients[i].remove()
+
+            # очищаем список клиентов
+            self.__CameraClients.clear()
 
     def __closeSocket(self, socket):
         try:

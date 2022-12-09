@@ -4,6 +4,7 @@ from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QHeaderView, QTableWidgetItem
 
 from PyQt5.QtCore import QTimer, QTime
+from PyQt5.QtCore import QSize
 
 from PyQt5.QtGui import QPalette, QBrush, QPixmap, QColor, QImage
 
@@ -70,8 +71,8 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         
     def updateVideoBarrier(self, pix):
 
-        d = 0.7
-        pix = pix.scaled(pix.width() * d, pix.height() * d)
+        self.d = 0.7
+        pix = pix.scaled(pix.width() * self.d, pix.height() * self.d)
         self.videoPeopleLabel.setPixmap(pix)
         
     def updateTime(self):
@@ -108,7 +109,16 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
             self.openGate.emit()
             self.gate.Open()
             setStyleButton(self.openGateButton, [0, 200, 0], "Закрыть")
-            
-        
-        
-        
+
+    # сообщаем пользователю об потери соединения
+    def eventDisconnectServer(self):
+        self.videoPeopleLabel.clear()
+        self.videoCarLabel.clear()
+
+        self.gifNoise = QtGui.QMovie("noSiganlGif.gif")
+        self.gifNoise.setScaledSize(QSize(self.d*640, self.d*480))
+
+        self.videoCarLabel.setMovie(self.gifNoise)
+        self.videoPeopleLabel.setMovie(self.gifNoise)
+
+        self.gifNoise.start()
