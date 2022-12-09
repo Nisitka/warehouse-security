@@ -6,14 +6,14 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1335</width>
-    <height>674</height>
+    <width>1461</width>
+    <height>775</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_7">
+  <layout class="QVBoxLayout" name="verticalLayout_8">
    <item>
     <widget class="QLabel" name="nameGuardLabel">
      <property name="font">
@@ -37,7 +37,7 @@
       </font>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="cameraTab">
       <attribute name="title">
@@ -48,6 +48,19 @@
         <layout class="QHBoxLayout" name="mainhLayout">
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_13">
+           <item>
+            <spacer name="verticalSpacer_9">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
            <item>
             <widget class="QLabel" name="timeLabel">
              <property name="font">
@@ -386,6 +399,56 @@
              </item>
             </layout>
            </item>
+           <item>
+            <spacer name="verticalSpacer_11">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_14">
+             <item>
+              <spacer name="horizontalSpacer_18">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item>
+              <widget class="QPushButton" name="repeatConnectButton">
+               <property name="text">
+                <string>повторное подключение</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <spacer name="horizontalSpacer_19">
+               <property name="orientation">
+                <enum>Qt::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </item>
           </layout>
          </item>
          <item>
@@ -604,74 +667,74 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_8">
                <item>
-                <layout class="QVBoxLayout" name="verticalLayout_10">
+                <layout class="QVBoxLayout" name="verticalLayout_9">
                  <item>
-                  <spacer name="verticalSpacer_7">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_7">
+                  <layout class="QVBoxLayout" name="verticalLayout_10">
                    <item>
-                    <spacer name="horizontalSpacer_9">
+                    <spacer name="verticalSpacer_7">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Vertical</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
-                       <width>40</width>
-                       <height>20</height>
+                       <width>20</width>
+                       <height>40</height>
                       </size>
                      </property>
                     </spacer>
                    </item>
                    <item>
-                    <widget class="QLabel" name="photoPeopleLabel">
-                     <property name="text">
-                      <string>TextLabel</string>
-                     </property>
-                    </widget>
+                    <layout class="QHBoxLayout" name="horizontalLayout_7">
+                     <item>
+                      <spacer name="horizontalSpacer_9">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QLabel" name="photoPeopleLabel">
+                       <property name="text">
+                        <string>TextLabel</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_10">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
                    </item>
                    <item>
-                    <spacer name="horizontalSpacer_10">
+                    <spacer name="verticalSpacer_6">
                      <property name="orientation">
-                      <enum>Qt::Horizontal</enum>
+                      <enum>Qt::Vertical</enum>
                      </property>
                      <property name="sizeHint" stdset="0">
                       <size>
-                       <width>40</width>
-                       <height>20</height>
+                       <width>20</width>
+                       <height>40</height>
                       </size>
                      </property>
                     </spacer>
                    </item>
                   </layout>
                  </item>
-                 <item>
-                  <spacer name="verticalSpacer_6">
-                   <property name="orientation">
-                    <enum>Qt::Vertical</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>20</width>
-                     <height>40</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_9">
                  <item>
                   <layout class="QHBoxLayout" name="horizontalLayout_5">
                    <item>
@@ -1036,19 +1099,6 @@
       <attribute name="title">
        <string>Настройки</string>
       </attribute>
-      <widget class="QPushButton" name="repeatConnectButton">
-       <property name="geometry">
-        <rect>
-         <x>90</x>
-         <y>90</y>
-         <width>201</width>
-         <height>41</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>повторное подключение</string>
-       </property>
-      </widget>
      </widget>
     </widget>
    </item>
