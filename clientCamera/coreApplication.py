@@ -3,6 +3,8 @@ from PyQt5.QtCore import QObject
 
 from GUI import gui
 
+from networkModule import Socket
+
 class Core(QObject):
 
     def __init__(self, argv):
@@ -10,6 +12,13 @@ class Core(QObject):
         self.__app = QApplication(argv)
 
         self.appGui = gui()
+
+        self.netModule = Socket()
+
+        self.appGui.connectServerSignal[str].connect(self.connectServer)
+
+    def connectServer(self, host):
+        self.netModule.connectServer(host, 2323, "Camera1", "F31415926")
 
     #   запуск приложения
     def run(self):

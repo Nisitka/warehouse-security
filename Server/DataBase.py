@@ -54,9 +54,9 @@ class dataBase(QObject):
         print("инициализация в базе данных")
 
         # при получении особого шифра вместо пароля мы понимаем что это камера
-        if password == "f8o13_vn2fk84ds_43f":
+        if password == "F31415926":
             print("присоединение камеры!")
-            self.authorizationClient.emit(login, address, typeClient.Guard.value)
+            self.authorizationClient.emit(login, address, typeClient.Camera.value)
 
         else:
             print("присоединение охранника!")

@@ -36,6 +36,7 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         self.__setTabBar()
         self.__setServer()
         self.__setGuardClients()
+        self.__setCamerasClients()
         self.__setNeuralNet()
         self.__setToolBoxSettings()
 
@@ -136,19 +137,33 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
                  }
                 """)
 
-    def addNewClient(self, name, address):
-        self.__clientToTable(name, address)
-        self.__appendInfoWindow("Подключен новый клиент (" + name + ")")
+    def addNewClient(self, login, address, tClient):
 
-    def __clientToTable(self, name, address):
+        if (tClient == typeClient.Guard.value):
+            self.__addGuardToTable(login, address)
+        else:
+            self.__addCameraToTable(login, address)
+
+        self.__appendInfoWindow("Подключен новый клиент (" + login + ")")
+
+    def __addCameraToTable(self, login, address):
+        self.camersTableWidget.setRowCount(self.camersTableWidget.rowCount() + 1)
+
+        self.camersTableWidget.setItem(self.camersTableWidget.rowCount() - 1, 0, QTableWidgetItem(login))
+        self.camersTableWidget.setItem(self.camersTableWidget.rowCount() - 1, 1, QTableWidgetItem(address))
+
+    def __addGuardToTable(self, login, address):
         self.guardsTableWidget.setRowCount(self.guardsTableWidget.rowCount() + 1)
 
-        self.guardsTableWidget.setItem(self.guardsTableWidget.rowCount() - 1, 0, QTableWidgetItem(name))
+        self.guardsTableWidget.setItem(self.guardsTableWidget.rowCount() - 1, 0, QTableWidgetItem(login))
         self.guardsTableWidget.setItem(self.guardsTableWidget.rowCount() - 1, 1, QTableWidgetItem(address))
 
     def __clearClientsTable(self):
         while (self.guardsTableWidget.rowCount() > 0):
             self.guardsTableWidget.removeRow(0)
+
+        while (self.camersTableWidget.rowCount() > 0):
+            self.camersTableWidget.removeRow(0)
 
     def setInfoServer(self, nameHost, IP):
         # установить пар-ры сокета сервера
@@ -275,11 +290,19 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
                                             }
                                         ''')
 
-    # установка визуала клиентов
+    # установка визуала клиентов-охранников
     def __setGuardClients(self):
         self.guardsTableWidget.setColumnCount(2)
-        self.guardsTableWidget.setHorizontalHeaderLabels(["Логин клиента", "Адрес"])
+        self.guardsTableWidget.setHorizontalHeaderLabels(["Логин охранника", "Адрес"])
         self.guardsTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+
+        # блокировка таблицы до включения сервера
+        self.guardsTableWidget.setEnabled(False)
+
+    def __setCamerasClients(self):
+        self.camersTableWidget.setColumnCount(2)
+        self.camersTableWidget.setHorizontalHeaderLabels(["Логин камеры", "Адрес"])
+        self.camersTableWidget.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
 
         # блокировка таблицы до включения сервера
         self.guardsTableWidget.setEnabled(False)

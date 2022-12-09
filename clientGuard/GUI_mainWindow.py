@@ -59,6 +59,8 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         
         self.setTableHistory()
 
+        self.d = 0.7
+
         # кнопка повторного подключения
         self.repeatConnectButton.clicked.connect(self.repeatConnectServer)
 
@@ -95,13 +97,11 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         
     def updateVideoCar(self, pix):
 
-        d = 0.7
-        pix = pix.scaled(pix.width() * d, pix.height() * d)
+        pix = pix.scaled(pix.width() * self.d, pix.height() * self.d)
         self.videoCarLabel.setPixmap(pix)
         
     def updateVideoBarrier(self, pix):
 
-        self.d = 0.7
         pix = pix.scaled(pix.width() * self.d, pix.height() * self.d)
         self.videoPeopleLabel.setPixmap(pix)
         

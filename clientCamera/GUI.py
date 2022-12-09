@@ -4,6 +4,7 @@ from PyQt5 import QtGui, QtWidgets
 import guiUI  # конвертированный файл дизайна
 
 class gui(QtWidgets.QWidget, guiUI.Ui_Form):
+    connectServerSignal = pyqtSignal(str)
 
     def __init__(self):
         # Это здесь нужно для доступа к переменным, методам
@@ -15,3 +16,8 @@ class gui(QtWidgets.QWidget, guiUI.Ui_Form):
 
         # настройки визула
         self.setWindowTitle("client-camera")
+
+        self.pushButton.clicked.connect(self.connectServer)
+
+    def connectServer(self):
+        self.connectServerSignal.emit(self.lineEdit.text())

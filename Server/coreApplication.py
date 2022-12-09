@@ -63,7 +63,7 @@ class Core(QObject):
         self.__server.getSocket().addNewClient(login, typeClient)
 
         # отображаем об этом информацию в интерфейсе
-        self.__gui.getMainWindow().addNewClient(login, address)
+        self.__gui.getMainWindow().addNewClient(login, address, typeClient)
 
     def __blockingClient(self):
         self.__server.getSocket().lockNewClient()

@@ -11,10 +11,12 @@ import cv2  # это временно!!!
 import os
 import sys
 
+import numpy
+
 # типы клиентов
 class typeClient(enum.Enum):
     Guard = 1
-    Barrier = 2
+    Camera = 2
 
 class guardClient(QObject, Thread):
     dataPackageSize = 2048 * 1000 * 1000
@@ -36,8 +38,6 @@ class guardClient(QObject, Thread):
 
     def run(self):
         self.__working = True
-
-        # self.__waitData()
 
     def getSocket(self):
         return self.__socket
@@ -66,22 +66,24 @@ class guardClient(QObject, Thread):
         return self.__loginGuard
 
 class cameraClient(QObject, Thread):
-    dataPackageSize = 2048 * 1000 * 1000
 
     def __init__(self, socket_, loginCamera_):
         QObject.__init__(self)
         Thread.__init__(self)
 
+        self.hVideo = 480
+        self.wVideo = 640
+        self.imageSize = self.hVideo * self.wVideo * 3
+
         # сокет взаимодействия с камерой
-        self.__socket = socket_
+        self.__Socket = socket_
 
         self.__login = loginCamera_
 
-        # создать новый объект камеру
-        self.cap = cv2.VideoCapture(0) # временно!
-        _, self.__currentImage = self.cap.read()
-
         self.__work = True
+
+    def getSocket(self):
+        return self.__Socket
 
     def remove(self):
         self.__work = False
@@ -90,7 +92,31 @@ class cameraClient(QObject, Thread):
         return self.__currentImage
 
     def acceptImage(self):
-        _, self.__currentImage = self.cap.read()
+        try:
+            data = self.__Socket.recv(self.imageSize)
+            data = list(data)
+
+            # print(len(data))
+            if (len(data) != self.imageSize):
+                print("потеря данных!")
+
+                # запрос следующего изображения
+                self.sendTextData("Get")
+            else:
+                # print("accept!")
+                self.__currentImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
+
+                # сообщаем о том, что готовы к след. изображению
+                self.sendTextData("Get")
+        except:
+            print("соединение с камерой потеряно!")
+            # сообщаем ядру об потери соединения
+
+            # прекращаем получение данных
+            self.__work = False
+
+    def sendTextData(self, textMessage):
+        self.__Socket.sendall(textMessage.encode("utf-8"))
 
     def run(self):
         # получение данных

@@ -58,8 +58,6 @@ class Core(QObject):
     def autheUser(self, host_, port_, login_, password_):
         self.netModule.connectServer(host_, port_, login_, password_)
         try:
-
-
             # если удалось подключиться сохраняем для повторного подкл.
             self.host = host_
             self.port = port_

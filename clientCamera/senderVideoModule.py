@@ -6,19 +6,20 @@ import sys
 
 import cv2
 
-from Client import typeClient
-
-from processingImages import processingImage
-
 class senderVideo(QObject, Thread):
     disabled = pyqtSignal(str, int)  # информируем об разрыве соединения
 
-    def __init__(self, camera, clientGuard):
+    def __init__(self, socketServer):
         QObject.__init__(self)
         Thread.__init__(self)
 
-        self.cap = camera
-        self.__clientGuard = clientGuard
+        self.hVideo = 480
+        self.wVideo = 640
+
+        # создать новый объект камеру
+        self.cap = cv2.VideoCapture(0)
+
+        self.__socketServer = socketServer
 
         self.work = True
 
@@ -26,48 +27,45 @@ class senderVideo(QObject, Thread):
         self.sendImagesData()
         while self.work:
             # ждем инфы об принятии файла
-            dataUser = self.waitData()
-            if (dataUser == "Get"):
+            dataServer = self.waitData()
+            if (dataServer == "Get"):
                 self.sendImagesData()
 
         # закрываем поток
         sys.exit()
 
     def sendImagesData(self):
-        image = self.cap.read()
-        print(type(image))
-
-        # сразу же обрабатываем изображение (так как уже в отдельном потоке)
-        # image = processingImage(image)
+        # считываем изображение с камеры
+        _, image = self.cap.read()
 
         # подгоняем под размер для интерфейса ПО охранника
         image = cv2.resize(image, dsize=(640, 480))
 
         # преобразуем в одномерный numpy массив
         outArr = image.reshape((-1,))
-        print(len(outArr))
+
         try:
-            self.__clientGuard.getSocket().sendall(outArr)
+            self.__socketServer.send(outArr)
         # соединение разорвано
         except:
             print("соединение разорвано")
-            self.disabled.emit(str(self.__clientGuard.getLoginGuard()), typeClient.Guard.value)
+
+        print("send")
 
     def waitData(self):
         while True:
             try:
-                dataUser = self.__clientGuard.getSocket().recv(200)
-                dataUser = dataUser.decode("utf-8")
-                print(dataUser)
+                dataServer = self.__socketServer.recv(200)
+                dataServer = dataServer.decode("utf-8")
+                print(dataServer)
             # соединение разорвано
             except:
                 print("соединение разорвано")
-                self.disabled.emit(str(self.__clientGuard.getLoginGuard()), typeClient.Guard.value)
 
                 self.work = False
                 return
 
-            if not dataUser:
+            if not dataServer:
                 break
             else:
-                return dataUser
+                return dataServer

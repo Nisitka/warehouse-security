@@ -7,7 +7,7 @@ import socket as socketNetwork
 from Client import guardClient, typeClient, cameraClient
 
 import codecs
-from sendersData import senderViideo
+from sendersData import senderVideo
 
 import cv2  # это временно!!!
 
@@ -90,7 +90,7 @@ class socketServer(QObject, Thread):
             self.sendTextData(self.__GuardClients[-1].getSocket(), "initSuccessfully")
 
             # дожидаемся готовности клиента и только тогда отправляем инфу об камерах
-            data = self.waitData(self.__GuardClients[-1].getSocket())
+            data = self.waitTextData(self.__GuardClients[-1].getSocket())
             print(data)
 
             # если камеры, которые может видеть охранник есть, то:
@@ -99,26 +99,24 @@ class socketServer(QObject, Thread):
                 self.sendTextData(self.__GuardClients[-1].getSocket(), "readyCameras")
 
                 # дожидаемся ответа кдиента об принятии инфы об камерах
-                data = self.waitData(self.__GuardClients[-1].getSocket())
+                data = self.waitTextData(self.__GuardClients[-1].getSocket())
                 print(data)
 
                 # отправляем запрос на отправку видео
                 self.sendTextData(self.__GuardClients[-1].getSocket(), "sendVideo")
 
                 # результат запроса (в этот момент клиент готов принимать карнинки)
-                data = self.waitData(self.__GuardClients[-1].getSocket())
+                data = self.waitTextData(self.__GuardClients[-1].getSocket())
                 print(data)
                 if (data == "readyGetVideo"):
 
                     # _________временно!__________________
-                    cap = cameraClient("socket", "login")
-                    cap.start()  # запуск получения данных
-                    # добавление в спиское камер
-                    self.__CameraClients.append(cap)
+                    # выбирается нужная камера
+                    cap = self.__CameraClients[-1]
                     # ____________________________________
 
                     # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
-                    newSender = senderViideo(cap, self.__GuardClients[-1])
+                    newSender = senderVideo(cap, self.__GuardClients[-1])
                     newSender.disabled[str, int].connect(self.disconnectClient)
                     newSender.start()
 
@@ -129,6 +127,12 @@ class socketServer(QObject, Thread):
         else:
             # добаляем камеру в общий список подкл. камер
             self.__CameraClients.append(cameraClient(self.__newConnection, login))
+
+            # запускаем клиента (начинает ожидание передачи данных)
+            self.__CameraClients[-1].start()
+
+            # сообщаем камере что готовы принимать видео
+            self.sendTextData(self.__newConnection, "readyGetVideo")
 
     def disconnectClient(self, login, tClient):
 
@@ -148,7 +152,7 @@ class socketServer(QObject, Thread):
         # отключаем этого клиента
         self.__closeSocket(self.__newConnection)
 
-    def waitData(self, socket):
+    def waitTextData(self, socket):
         while True:
             dataUser = socket.recv(512)
             dataUser = dataUser.decode("utf-8")
