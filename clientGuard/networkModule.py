@@ -11,11 +11,13 @@ import numpy
 
 import socket
 import codecs
-import pickle
-import json
+
+import sys
+
+from threadersAcceptData import threadVideo
 
 class Socket(QObject, Thread):
-    importData = pyqtSignal(QPixmap, QPixmap)
+    importVideoSignal = pyqtSignal(QPixmap, QPixmap)
 
     # результат авторизации пользователя
     initUserInfo = pyqtSignal(bool)
@@ -27,11 +29,7 @@ class Socket(QObject, Thread):
     startAcceptVideo = pyqtSignal()
 
     # сообщаем ядру о потери соединения
-    disconnectServer = pyqtSignal()
-
-    hVideo = 480
-    wVideo = 640
-    dataPackageSize = hVideo * wVideo * 3
+    disconnectServerSignal = pyqtSignal()
 
     def __init__(self):
         QObject.__init__(self)
@@ -39,13 +37,11 @@ class Socket(QObject, Thread):
 
         self.__working = True
 
-        # кол-во принятых пакетов
-        self.currentPacked = 0
-
     def connectServer(self, host, port, login, password):
         # инициализируем свой сокет
-        self.__clientSocket = socket.socket()
-        self.__clientSocket.connect((host, port))
+        self.__Socket = socket.socket()
+        # соеденяем его с сервером
+        self.__Socket.connect((host, port))
 
         # отправляем логин с паролем
         message = str(login) + '/' + str(password)  # шифр из логина и пароля
@@ -86,61 +82,34 @@ class Socket(QObject, Thread):
             self.initUserInfo.emit(False)
 
     # получение изображений от сервера
-    def run(self):
-        # сообщаем об готовности принимать видео
-        self.sendTextData("readyGetVideo")
-        print("readyGetVideo")
+    def acceptVideo(self):
+        # создаем примщика видео потока
+        self.threadAcceptVideo = threadVideo(self.__Socket)
+        self.threadAcceptVideo.importVideo[QPixmap].connect(self.outVideo)
+        self.threadAcceptVideo.disconnectServer.connect(self.disconnectServer)
 
-        while self.__working:
-            self.getDataServer()
+        self.threadAcceptVideo.start()
 
-        print("Принятие изображений прекращено!")
+    def disconnectServer(self):
+        # очищаем ссылку
+        del self.threadAcceptVideo
 
-    def getDataServer(self):
-        try:
-            data = self.__clientSocket.recv(self.dataPackageSize + 10)
-            data = list(data)
+        # сообщаем ядру об отключении сервера
+        self.disconnectServerSignal.emit()
 
-            if (len(data) != self.dataPackageSize):
-                print("потеря данных!")
+    def outVideo(self, pix):
+        self.importVideoSignal.emit(pix, pix)
 
-                # запрос следующего изображения
-                self.sendTextData("Get")
-            else:
-                # print("accept!")
-                npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
-                cv2.imwrite("img1.jpg", npImage)
-                cv2.imwrite("img2.jpg", npImage)
-
-                pix = QPixmap("img1.jpg")
-
-                self.importData.emit(pix, pix)
-
-                # сообщаем о том, что готовы к след. изображению
-                self.sendTextData("Get")
-
-        except:
-            print("соединение с сервером потеряно!")
-            # сообщаем ядру об потери соединения
-            self.disconnectServer.emit()
-
-            # прекращаем получение данных
-            self.__working = False
-
+    # отправка текстовых данных
     def sendTextData(self, textMessage):
-        self.__clientSocket.sendall(textMessage.encode("utf-8"))
+        self.__Socket.sendall(textMessage.encode("utf-8"))
 
     # ожидание текстовой информации
     def waitTextData(self):
         while True:
-            dataServer = self.__clientSocket.recv(512)
+            dataServer = self.__Socket.recv(512)
             dataServer = dataServer.decode("utf-8")
             if not dataServer:
                 break
             else:
                 return dataServer
-
-    def stop(self):
-        self.__working = False
-        self.join()
-

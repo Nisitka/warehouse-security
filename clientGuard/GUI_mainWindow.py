@@ -16,12 +16,17 @@ from functionGUI import setStyleButton
 
 from entries import Barrier, Gate
 
+import datetime
+
 class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
     openBarrier = pyqtSignal()   # сигнал открытия турникета
     closeBarrier = pyqtSignal()  # сигнал закрытия турникета
     
     openGate = pyqtSignal()   # сигнал открытия ворот
     closeGate = pyqtSignal()  # сигнал закрытия ворот
+
+    # сигнал повторного подключения к серверу
+    repeatConnectServerSignal = pyqtSignal()
 
     def __init__(self):
         # Это здесь нужно для доступа к переменным, методам
@@ -53,6 +58,12 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         self.setPalette(palette)
         
         self.setTableHistory()
+
+        # кнопка повторного подключения
+        self.repeatConnectButton.clicked.connect(self.repeatConnectServer)
+
+    def repeatConnectServer(self):
+        self.repeatConnectServerSignal.emit()
        
     def setTableHistory(self):
         
@@ -110,6 +121,11 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
             self.gate.Open()
             setStyleButton(self.openGateButton, [0, 200, 0], "Закрыть")
 
+    def __appendInfoWindow(self, text):
+        current_date_time = datetime.datetime.now()
+        current_time = current_date_time.time()
+        self.textInfoServer.append(str(current_time)[0:-7] + ": " + text)
+
     # сообщаем пользователю об потери соединения
     def eventDisconnectServer(self):
         self.videoPeopleLabel.clear()
@@ -122,3 +138,5 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         self.videoPeopleLabel.setMovie(self.gifNoise)
 
         self.gifNoise.start()
+
+        self.__appendInfoWindow("Соединение с сервером потеряно")

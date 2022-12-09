@@ -24,26 +24,26 @@ class Core(QObject):
         self.guiApp.openBarrierSignal.connect(self.openBarrier)
         self.guiApp.closeBarrierSignal.connect(self.closeBarrier)
 
+        # повторное подключение к серверу
+        self.guiApp.mainWin.repeatConnectServerSignal.connect(self.repeatConnect)
+
         # инициализируем модуль сетевого соединения
         self.netModule = Socket()
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
-        self.netModule.importData[QPixmap, QPixmap].connect(self.getDataServer)
+        self.netModule.importVideoSignal[QPixmap, QPixmap].connect(self.getVideoServer)
         self.netModule.startAcceptVideo.connect(self.acceptVideo)
-        self.netModule.disconnectServer.connect(self.eventDisconnectServer)
+        self.netModule.disconnectServerSignal.connect(self.eventDisconnectServer)
 
     def eventDisconnectServer(self):
         self.guiApp.mainWin.eventDisconnectServer()
 
     def acceptVideo(self):
         print("start accept video!")
-        # запускаем модуль сетевого соединения (в отдельном потоке)
-        self.netModule.start()
+        # запускаем в сетевом модуле принятие видео
+        self.netModule.acceptVideo()
 
-    def authorizationUser(self, key):
-        if (key):
-            # запускаем модуль сетевого соединения (в отдельном потоке)
-            # self.netModule.start()
-
+    def authorizationUser(self, statusKey):
+        if (statusKey):
             # открываем главное окно интерфейса
             self.guiApp.showMainWin()
             # закрываем окно авторизации
@@ -51,13 +51,27 @@ class Core(QObject):
         else:
             QMessageBox.about(self.guiApp.initUserWin, "ошибка аутентификации: ", "Неверный логин или пароль!")
 
-    def autheUser(self, host, port, login, password):
+    def autheUser(self, host_, port_, login_, password_):
+        self.netModule.connectServer(host_, port_, login_, password_)
         try:
-            self.netModule.connectServer(host, port, login, password)
+
+
+            # если удалось подключиться сохраняем для повторного подкл.
+            self.host = host_
+            self.port = port_
+            self.login = login_
+            self.password = password_
         except:
             QMessageBox.about(self.guiApp.initUserWin, "ошибка аутентификации: ", "Cервер по такому адресу не запущен!")
 
-    def getDataServer(self, imagePeople, imageCar):
+    def repeatConnect(self):
+        try:
+            self.netModule.connectServer(self.host, self.port, self.login, self.password)
+
+        except:
+            print("Не удалось повторно подключиться")
+
+    def getVideoServer(self, imagePeople, imageCar):
         self.guiApp.mainWin.updateVideoBarrier(imagePeople)
         self.guiApp.mainWin.updateVideoCar(imageCar)
 

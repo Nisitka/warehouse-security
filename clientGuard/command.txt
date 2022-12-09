@@ -1,1 +1,3 @@
 pyuic5 D:\Programming\warehouse-security\clientGuard\initUserWindow.ui -o D:\Programming\warehouse-security\clientGuard\initUserWindowUI.py
+
+pyuic5 D:\Programming\warehouse-security\clientGuard\mainWindow.ui -o D:\Programming\warehouse-security\clientGuard\mainWindowUI.py
