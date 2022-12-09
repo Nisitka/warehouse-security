@@ -62,6 +62,9 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         # кнопка повторного подключения
         self.repeatConnectButton.clicked.connect(self.repeatConnectServer)
 
+    def eventConnectServer(self):
+        self.repeatConnectButton.setEnabled(False)
+
     def repeatConnectServer(self):
         self.repeatConnectServerSignal.emit()
        
@@ -128,6 +131,8 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
 
     # сообщаем пользователю об потери соединения
     def eventDisconnectServer(self):
+        self.repeatConnectButton.setEnabled(True)
+
         self.videoPeopleLabel.clear()
         self.videoCarLabel.clear()
 

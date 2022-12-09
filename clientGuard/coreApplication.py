@@ -46,8 +46,12 @@ class Core(QObject):
         if (statusKey):
             # открываем главное окно интерфейса
             self.guiApp.showMainWin()
+            #
+            self.guiApp.mainWin.eventConnectServer()
+
             # закрываем окно авторизации
             self.guiApp.closeInitUserWin()
+
         else:
             QMessageBox.about(self.guiApp.initUserWin, "ошибка аутентификации: ", "Неверный логин или пароль!")
 
