@@ -4,7 +4,6 @@ from GUI_mainWindow import mainWindow
 from GUI_initUserWindow import initWindow
 
 class gui(QObject):
-    # getDataClient = pyqtSignal(str, list)  # сигнал получения данных
     openBarrierSignal = pyqtSignal()   # сигнал открытия турникета
     closeBarrierSignal = pyqtSignal()  # сигнал закрытия турникета
 

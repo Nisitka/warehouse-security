@@ -10,7 +10,7 @@ from PyQt5.QtGui import QPalette, QBrush, QPixmap, QColor, QImage
 
 import PyQt5.Qt
 
-import mainWindowUI # конвертированный файл дизайна
+import mainWindowUI  # конвертированный файл дизайна
 
 from functionGUI import setStyleButton
 
@@ -32,9 +32,9 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         # Это здесь нужно для доступа к переменным, методам
         # и т.д. в файле design.py
         super().__init__()
-        self.setupUi(self) # для инициализации нашего дизайна
+        self.setupUi(self)  # для инициализации нашего дизайна
         
-        self.setWindowTitle("securityMaster!")
+        self.setWindowTitle("securityMaster")
         
         self.timerCurrentTime = QTimer()
         self.timerCurrentTime.timeout.connect(self.updateTime)
@@ -61,6 +61,22 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
 
         # кнопка повторного подключения
         self.repeatConnectButton.clicked.connect(self.repeatConnectServer)
+
+        # кнопка "выход"
+        self.exitButton.setStyleSheet('''
+                                                    QPushButton {
+                                                        background-color: rgb(255,255,255); color: rgb(0,0,0);
+
+                                                        border-style: outset;
+                                                        border-radius: 3px;
+                                                        border-width: 1px;
+                                                        border-color: rgb(0,0,0);
+                                                    }
+                                                    QPushButton:hover {
+                                                        background-color : rgb(224,0,0); color: rgb(104,0,0);
+                                                        border-color: rgb(0,0,0);
+                                                    }
+                                                ''')
 
     def eventConnectServer(self):
         self.repeatConnectButton.setEnabled(False)
