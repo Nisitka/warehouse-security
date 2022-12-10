@@ -57,7 +57,7 @@ class threadVideo(QObject, Thread):
                 # print("accept!")
                 npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
                 cv2.imwrite("img1.jpg", npImage)
-                cv2.imwrite("img2.jpg", npImage)
+                # cv2.imwrite("img2.jpg", npImage)
 
                 pix = QPixmap("img1.jpg")
 

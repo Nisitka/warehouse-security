@@ -97,12 +97,12 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         
     def updateVideoCar(self, pix):
 
-        pix = pix.scaled(pix.width() * self.d, pix.height() * self.d)
+        pix = pix.scaled(int(pix.width() * self.d), int(pix.height() * self.d))
         self.videoCarLabel.setPixmap(pix)
         
     def updateVideoBarrier(self, pix):
 
-        pix = pix.scaled(pix.width() * self.d, pix.height() * self.d)
+        pix = pix.scaled(int(pix.width() * self.d), int(pix.height() * self.d))
         self.videoPeopleLabel.setPixmap(pix)
         
     def updateTime(self):
@@ -153,7 +153,7 @@ class mainWindow(QtWidgets.QWidget, mainWindowUI.Ui_Form):
         self.videoCarLabel.clear()
 
         self.gifNoise = QtGui.QMovie("noSiganlGif.gif")
-        self.gifNoise.setScaledSize(QSize(self.d*640, self.d*480))
+        self.gifNoise.setScaledSize(QSize(int(self.d*640), int(self.d*480)))
 
         self.videoCarLabel.setMovie(self.gifNoise)
         self.videoPeopleLabel.setMovie(self.gifNoise)

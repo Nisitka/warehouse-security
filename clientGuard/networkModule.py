@@ -9,7 +9,7 @@ import time
 
 import numpy
 
-import socket
+import socket as socketNetwork
 import codecs
 
 import sys
@@ -39,7 +39,9 @@ class Socket(QObject, Thread):
 
     def connectServer(self, host, port, login, password):
         # инициализируем свой сокет
-        self.__Socket = socket.socket()
+        # self.__Socket = socket.socket()
+        self.__Socket = socketNetwork.socket(socketNetwork.AF_INET, socketNetwork.SOCK_STREAM)
+        self.__Socket.setsockopt(socketNetwork.SOL_SOCKET, socketNetwork.SO_REUSEADDR, 1)
         # соеденяем его с сервером
         self.__Socket.connect((host, port))
 
