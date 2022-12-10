@@ -115,7 +115,8 @@ class dbConnect:
 
 
     def editPassword(login, password, nev_password):  # функция для замены пароля охранника
-
+        if len(passvord) < 6:
+            return('FALSE')
         connection, cursor = dbConnect.connectionOpen()
         cursor.execute('SELECT PASSWORD FROM SECURITIES WHERE LOGIN=?', (login, ))
         password_db = cursor.fetchall()[0][0]
@@ -137,7 +138,11 @@ class dbConnect:
             dbConnect.connectionClose(connection, cursor)
             return('FALSE')
 
-
+    def accessAttempts(computer_id, datetime):  # функция для записи неужачных попыток входа
+        connection, cursor = dbConnect.connectionOpen()
+        cursor.execute('INSERT INTO access_attempts (computer_id, datetime) VALUES (?, ?)', (computer_id, datetime, ))
+        connection.commit()
+        dbConnect.connectionClose(connection, cursor)
 dbConnect.editPassword('ivanov', '1', '2')
 
 
