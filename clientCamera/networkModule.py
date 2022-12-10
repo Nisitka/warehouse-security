@@ -11,10 +11,13 @@ from senderVideoModule import senderVideo
 
 class Socket(QObject, Thread):
     resultConnect = pyqtSignal(bool)
+    disabledConnectSignal = pyqtSignal()
 
-    def __init__(self):
+    def __init__(self, camera):
         QObject.__init__(self)
         Thread.__init__(self)
+
+        self.__camera = camera
 
         self.__working = True
 
@@ -32,6 +35,7 @@ class Socket(QObject, Thread):
             self.resultConnect.emit(True)
 
             # отправляем логин с паролем
+            print(str(login) + '/' + str(password))
             message = str(login) + '/' + str(password)  # шифр из логина и пароля
             self.sendTextData(message)
 
@@ -45,11 +49,27 @@ class Socket(QObject, Thread):
 
     def setSenderVideo(self):
         # создаем отправщика видео
-        self.sender = senderVideo(self.__Socket)
-
+        self.sender = senderVideo(self.__Socket, self.__camera)
+        self.sender.disabled.connect(self.disabledConnect)
         # сразу запускаем его в отдельном потоке:
         #   (всегда ждем команды на отправки изображения)
         self.sender.start()
+
+    def disabledConnect(self):
+        # отключаем сокет
+        self.disconnect()
+
+        # сообщаем ядру об потери соединения
+        self.disabledConnectSignal.emit()
+
+    def disconnect(self):
+        try:
+            self.__Socket.shutdown(socketNetwork.SHUT_RDWR)
+            print("Это Linux")
+        except:
+            print("Это windows детка")
+
+        self.__Socket.close()
 
     # ожидание текстовых данных
     def waitTextData(self):

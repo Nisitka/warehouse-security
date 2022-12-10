@@ -7,17 +7,16 @@ import sys
 import cv2
 
 class senderVideo(QObject, Thread):
-    disabled = pyqtSignal(str, int)  # информируем об разрыве соединения
+    disabled = pyqtSignal()  # информируем об разрыве соединения
 
-    def __init__(self, socketServer):
+    def __init__(self, socketServer, camera):
         QObject.__init__(self)
         Thread.__init__(self)
 
+        self.__camera = camera
+
         self.hVideo = 480
         self.wVideo = 640
-
-        # создать новый объект камеру
-        self.cap = cv2.VideoCapture(0)
 
         self.__socketServer = socketServer
 
@@ -40,6 +39,7 @@ class senderVideo(QObject, Thread):
             # соединение разорвано
             except:
                 print("соединение разорвано")
+                self.disabled.emit()
                 self.__work = False
 
         # закрываем поток
@@ -47,9 +47,7 @@ class senderVideo(QObject, Thread):
 
     def readImage(self):
         # считываем изображение с камеры
-        _, image = self.cap.read()
-
-        self.currentImage = image
+        self.currentImage = self.__camera.readImage()
 
     def sendImagesData(self):
         # подгоняем под размер для интерфейса ПО охранника
@@ -65,6 +63,7 @@ class senderVideo(QObject, Thread):
         # соединение разорвано
         except:
             print("соединение разорвано")
+            self.disabled.emit()
 
         print("send")
 

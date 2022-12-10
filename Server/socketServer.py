@@ -138,7 +138,12 @@ class socketServer(QObject, Thread):
         else:
             return None
 
-    def disconnectClient(self, login, tClient):
+    # проверка наличия соединения со всеми клиентами
+    def checkConnectAllClient(self):
+        print("проверка соединений")
+
+    # удалить клиента по логину указанного типа
+    def removeClient(self, login, tClient):
 
         if (tClient == typeClient.Guard.value):
             for guardClient in self.__GuardClients:
