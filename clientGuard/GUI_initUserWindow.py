@@ -34,7 +34,7 @@ class initWindow(QtWidgets.QWidget, initUserWindowUI.Ui_Form):
         self.titleSetNETLabel.setStyleSheet(style)
 
         # временно для отладки
-        self.hostLineEdit.setText('26.78.198.77')
+        self.hostLineEdit.setText('192.168.3.2')
         self.loginLineEdit.setText('Nisitka')
         self.portLineEdit.setText('2323')
 

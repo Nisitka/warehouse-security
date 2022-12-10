@@ -18,6 +18,8 @@ class typeClient(enum.Enum):
     Guard = 1
     Camera = 2
 
+# потом реализовать насследование от скласса Client!!!!
+
 class guardClient(QObject, Thread):
     getNewImageSignal = pyqtSignal()
 
@@ -29,12 +31,15 @@ class guardClient(QObject, Thread):
         self.wVideo = 640
         self.imageSize = self.hVideo * self.wVideo * 3
 
-        self.login = loginGuard_
+        self.__login = loginGuard_
 
         # сокет взаимодействия с охранником
         self.__Socket = socket_
 
         self.__work = True
+
+    def getLogin(self):
+        return self.__login
 
     def send(self, data):
         self.__Socket.send(data)
@@ -49,12 +54,29 @@ class guardClient(QObject, Thread):
     # всегда ждет команды от охранника
     def run(self):
         while self.__work:
-            command = self.waitCommand()
-            if command == "Get":
-                # сообщаем об готовности принять новое изображение
-                self.getNewImageSignal.emit()
+            try:
+                command = self.waitCommand()
+                if command == "Get":
+                    # сообщаем об готовности принять новое изображение
+                    self.getNewImageSignal.emit()
+            except:
+                print("соединение с охранником потеряно")
 
         sys.exit()
+
+    def remove(self):
+        self.__work = False
+        self.__closeSocket()
+
+    def __closeSocket(self):
+        try:
+            self.__Socket.shutdown(socketNetwork.SHUT_RDWR)
+            print("Это Linux")
+        except:
+            print("Это windows")
+
+        self.__Socket.close()  # отключаем сокет
+
 
 class cameraClient(QObject, Thread):
     updateImage = pyqtSignal()
@@ -79,7 +101,7 @@ class cameraClient(QObject, Thread):
 
     # запросить изображение у камеры
     def requestImage(self):
-        self.__Socket.sendall("Get".encode("utf-8"))
+        self.__Socket.sendall("get".encode("utf-8"))
 
     def getCurrentImage(self):
         return self.currentImage
@@ -88,22 +110,40 @@ class cameraClient(QObject, Thread):
         image = self.__Socket.recv(self.imageSize)
         image = list(image)
 
-        print(len(image))  # кол-во эдементов в массиве
+        # print(len(image))  # кол-во эдементов в массиве
         if (len(image) != self.imageSize):
             print("потеря данных!")
 
         else:
             self.currentImage = numpy.array(image).reshape(self.hVideo, self.wVideo, 3)
 
+            # костыль чтобы картинка выглядела не как в 80-х
+            #   (потом будет реализовано сохранение картинрк -> перевод их в видео)
             cv2.imwrite("img.jpg", self.currentImage)
             self.currentImage = cv2.imread("img.jpg")
 
             self.updateImage.emit()
-            print("accept")
+
+    def remove(self):
+        self.__work = False
+        self.__closeSocket()
+
+    def __closeSocket(self):
+        try:
+            self.__Socket.shutdown(socketNetwork.SHUT_RDWR)
+            print("Это Linux")
+        except:
+            print("Это windows")
+
+        self.__Socket.close()  # отключаем сокет
 
     # всегда ждет принятие нового изображения
     def run(self):
         while self.__work:
-            self.acceptImage()
+            try:
+                self.acceptImage()
+
+            except:
+                print("Соединение с камерой потеряно")
 
         sys.exit()

@@ -21,21 +21,26 @@ class senderVideo(QObject, Thread):
 
         self.__socketServer = socketServer
 
-        self.work = True
+        self.__work = True
 
     def run(self):
         self.readImage()
-        while self.work:
-            '''
-            # ждем запроса изображения
-            dataServer = self.waitCommand()
-            if (dataServer == "Get"):
-                self.readImage()
-                self.sendImagesData()
-            '''
-            self.__socketServer.recv(200)
-            self.readImage()
-            self.sendImagesData()
+        while self.__work:
+            # ждем запроса на изображение
+            # self.__socketServer.recv(200)
+            try:
+                command = self.waitCommand()
+                if command == "get":
+                    # считываем изображение с камеры
+                    self.readImage()
+
+                    # отправляем изображение
+                    self.sendImagesData()
+
+            # соединение разорвано
+            except:
+                print("соединение разорвано")
+                self.__work = False
 
         # закрываем поток
         sys.exit()
@@ -64,19 +69,5 @@ class senderVideo(QObject, Thread):
         print("send")
 
     def waitCommand(self):
-        while True:
-            try:
-                dataServer = self.__socketServer.recv(200)
-                dataServer = dataServer.decode("utf-8")
-                print(dataServer)
-            # соединение разорвано
-            except:
-                print("соединение разорвано")
-
-                self.work = False
-                return
-
-            if not dataServer:
-                break
-            else:
-                return dataServer
+        command = self.__socketServer.recv(200)
+        return command.decode("utf-8")

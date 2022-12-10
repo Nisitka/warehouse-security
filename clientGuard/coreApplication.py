@@ -30,6 +30,7 @@ class Core(QObject):
         # инициализируем модуль сетевого соединения
         self.netModule = Socket()
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
+        self.netModule.initCamerasInfo[bool].connect(self.displayInfoCameras)
         self.netModule.importVideoSignal[QPixmap, QPixmap].connect(self.getVideoServer)
         self.netModule.startAcceptVideo.connect(self.acceptVideo)
         self.netModule.disconnectServerSignal.connect(self.eventDisconnectServer)
@@ -41,6 +42,10 @@ class Core(QObject):
         print("start accept video!")
         # запускаем в сетевом модуле принятие видео
         self.netModule.acceptVideo()
+
+    def displayInfoCameras(self, status):
+        if not status:
+            print("AAAAAAAAA")
 
     def authorizationUser(self, statusKey):
         if (statusKey):

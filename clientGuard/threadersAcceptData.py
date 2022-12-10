@@ -47,7 +47,7 @@ class threadVideo(QObject, Thread):
             data = self.__Socket.recv(self.dataPackageSize)
             data = list(data)
 
-            print(len(data))  # кол-во эдементов в массиве
+            # print(len(data))  # кол-во эдементов в массиве
             if (len(data) != self.dataPackageSize):
                 print("потеря данных!")
 
@@ -65,8 +65,6 @@ class threadVideo(QObject, Thread):
 
                 # сообщаем о том, что готовы к след. изображению
                 self.sendTextData("Get")
-
-                print("accept")
 
         except:
             print("соединение с сервером потеряно!")

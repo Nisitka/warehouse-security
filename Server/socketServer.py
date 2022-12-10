@@ -91,11 +91,17 @@ class socketServer(QObject, Thread):
 
             # дожидаемся готовности клиента и только тогда отправляем инфу об камерах
             data = self.waitTextData(self.__GuardClients[-1].getSocket())
-            print(data)
+            print(data + "!!!!")
 
-            # если камеры, которые может видеть охранник есть, то:
-            readyCameras = True
-            if (readyCameras):
+            # выбирается нужная камера (если такой нет, то сообщаем об этом)
+            self.cap = self.__requestCamera(self.__GuardClients[-1].getLogin())
+            if self.cap is None:
+                print("камеры для охранника не найдено")
+
+                # информируем ПО охранника об отсутствии подключенных разрешенных камер
+                self.sendTextData(self.__GuardClients[-1].getSocket(), "notCameras")
+
+            else:
                 self.sendTextData(self.__GuardClients[-1].getSocket(), "readyCameras")
 
                 # дожидаемся ответа кдиента об принятии инфы об камерах
@@ -112,18 +118,9 @@ class socketServer(QObject, Thread):
                     # запустить клиент-охранника в основном режиме
                     self.__GuardClients[-1].start()
 
-                    # _________временно!__________________
-                    # выбирается нужная камера
-                    self.cap = self.__CameraClients[-1]
-                    # ____________________________________
-
                     # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
                     self.newSender = senderVideo(self.cap, self.__GuardClients[-1])
-
-
-            else:
-                # информируем ПО охранника об отсутствии подключенных разрешенных камер
-                self.sendTextData(self.__GuardClients[-1].getSocket(), "notCameras")
+                    self.newSender.run()  # запускаем его
 
         else:
             # добаляем камеру в общий список подкл. камер
@@ -134,6 +131,12 @@ class socketServer(QObject, Thread):
 
             # сообщаем камере что готовы принимать видео
             self.sendTextData(self.__newConnection, "readyGetVideo")
+
+    def __requestCamera(self, loginGuard):
+        if len(self.__CameraClients) > 0:
+            return self.__CameraClients[-1]
+        else:
+            return None
 
     def disconnectClient(self, login, tClient):
 
@@ -166,6 +169,7 @@ class socketServer(QObject, Thread):
     def sendTextData(self, socket, data):
         socket.sendall(codecs.encode(str(data), 'UTF-8'))
 
+    # отключаем всех клиентов
     def __offClients(self):
         if (len(self.__GuardClients) > 0):
             # разрушаем каждоного клиента

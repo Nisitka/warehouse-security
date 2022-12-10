@@ -78,7 +78,7 @@ class Socket(QObject, Thread):
 
             else:
                 # сообщаем ядру об отсутсвии разрешенных камер
-                self.initCamerasInfo(False)
+                self.initCamerasInfo.emit(False)
         else:
             # информиркем ядро приложения об результатах аутентификации
             self.initUserInfo.emit(False)

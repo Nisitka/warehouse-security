@@ -18,7 +18,7 @@ class gui(QtWidgets.QWidget, guiUI.Ui_Form):
         self.setWindowTitle("client-camera")
 
         self.pushButton.clicked.connect(self.connectServer)
-        self.lineEdit.setText("26.78.198.77")
+        self.lineEdit.setText("192.168.3.2")
 
     def connectServer(self):
         self.connectServerSignal.emit(self.lineEdit.text())
