@@ -43,45 +43,48 @@ class Socket(QObject, Thread):
         self.__Socket = socketNetwork.socket(socketNetwork.AF_INET, socketNetwork.SOCK_STREAM)
         self.__Socket.setsockopt(socketNetwork.SOL_SOCKET, socketNetwork.SO_REUSEADDR, 1)
         # соеденяем его с сервером
-        self.__Socket.connect((host, port))
+        try:
+            self.__Socket.connect((host, port))
+            # отправляем логин с паролем
+            message = str(login) + '/' + str(password)  # шифр из логина и пароля
+            self.sendTextData(message)
 
-        # отправляем логин с паролем
-        message = str(login) + '/' + str(password)  # шифр из логина и пароля
-        self.sendTextData(message)
+            # ждем результатов аутентификации
+            dataServer = self.waitTextData()
 
-        # ждем результатов аутентификации
-        dataServer = self.waitTextData()
+            if (dataServer == "initSuccessfully"):
+                # информиркем ядро приложения об результатах аутентификации
+                self.initUserInfo.emit(True)
 
-        if (dataServer == "initSuccessfully"):
-            # информиркем ядро приложения об результатах аутентификации
-            self.initUserInfo.emit(True)
+                # информируем сервер об принятии результатов авторизации
+                self.sendTextData("getInfoInit")
 
-            # информируем сервер об принятии результатов авторизации
-            self.sendTextData("getInfoInit")
+                # ждем информации об камерах
+                dataCameras = self.waitTextData()
+                # информируем сервер об принятии инфы об камерах
+                self.sendTextData("getInfoCameras")
+                if (dataCameras == "readyCameras"):
+                    # сообщаем ядру об присутсвии разрешенных камер
+                    self.initCamerasInfo.emit(True)
 
-            # ждем информации об камерах
-            dataCameras = self.waitTextData()
-            # информируем сервер об принятии инфы об камерах
-            self.sendTextData("getInfoCameras")
-            if (dataCameras == "readyCameras"):
-                # сообщаем ядру об присутсвии разрешенных камер
-                self.initCamerasInfo.emit(True)
+                    # ждем запроса на отправку видео
+                    request = self.waitTextData()
+                    print(request)
 
-                # ждем запроса на отправку видео
-                request = self.waitTextData()
-                print(request)
+                    # подготовка к принятию видео
 
-                # подготовка к принятию видео
+                    # запускаем прием видео
+                    self.startAcceptVideo.emit()
 
-                # запускаем прием видео
-                self.startAcceptVideo.emit()
-
+                else:
+                    # сообщаем ядру об отсутсвии разрешенных камер
+                    self.initCamerasInfo.emit(False)
             else:
-                # сообщаем ядру об отсутсвии разрешенных камер
-                self.initCamerasInfo.emit(False)
-        else:
-            # информиркем ядро приложения об результатах аутентификации
-            self.initUserInfo.emit(False)
+                # информиркем ядро приложения об результатах аутентификации
+                self.initUserInfo.emit(False)
+
+        except:
+            print("неверные данные для авторизации")
 
     # получение изображений от сервера
     def acceptVideo(self):

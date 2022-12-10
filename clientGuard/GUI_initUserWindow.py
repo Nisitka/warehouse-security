@@ -14,12 +14,12 @@ class initWindow(QtWidgets.QWidget, initUserWindowUI.Ui_Form):
         self.connectButton.clicked.connect(self.initUser)
 
         self.setWindowTitle("securityMaster: авторизация")
-        size = QSize(600, 390)
+        size = QSize(490, 365)
         self.setFixedSize(size)
 
         # гифка для фона
         self.gifNeuron = QtGui.QMovie("neuron.gif")
-        self.gifNeuron.setScaledSize(size)
+        self.gifNeuron.setScaledSize(QSize(650, 400))
         self.gifBackgroundLabel.setMovie(self.gifNeuron)
         self.gifBackgroundLabel.setFixedSize(size)
         self.gifNeuron.start()
@@ -37,6 +37,22 @@ class initWindow(QtWidgets.QWidget, initUserWindowUI.Ui_Form):
         self.hostLineEdit.setText('192.168.3.2')
         self.loginLineEdit.setText('Nisitka')
         self.portLineEdit.setText('2323')
+
+        # кнопка "выход"
+        self.connectButton.setStyleSheet('''
+                                                            QPushButton {
+                                                                background-color: rgb(20,20,21); color: rgb(97,197,242);
+
+                                                                border-style: outset;
+                                                                border-radius: 3px;
+                                                                border-width: 1px;
+                                                                border-color: rgb(97,197,242);
+                                                            }
+                                                            QPushButton:hover {
+                                                                background-color : rgb(97,197,242); color: rgb(0,0,0);
+                                                                border-color: rgb(0,0,0);
+                                                            }
+                                                        ''')
 
     def initUser(self):
         host = self.hostLineEdit.text()
