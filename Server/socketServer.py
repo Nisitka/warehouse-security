@@ -84,7 +84,7 @@ class socketServer(QObject, Thread):
         # если клиент не охранник, то значит камера
         if (tClient == typeClient.Guard.value):
             # добавляем в список клиентов-охранников нового клиента
-            self.__GuardClients.append(guardClient(self.__newConnection, self.__newClientAddress, login))
+            self.__GuardClients.append(guardClient(self.__newConnection, login))
 
             # информируем об удачной инициализации ПО охранника
             self.sendTextData(self.__GuardClients[-1].getSocket(), "initSuccessfully")
@@ -109,16 +109,17 @@ class socketServer(QObject, Thread):
                 data = self.waitTextData(self.__GuardClients[-1].getSocket())
                 print(data)
                 if (data == "readyGetVideo"):
+                    # запустить клиент-охранника в основном режиме
+                    self.__GuardClients[-1].start()
 
                     # _________временно!__________________
                     # выбирается нужная камера
-                    cap = self.__CameraClients[-1]
+                    self.cap = self.__CameraClients[-1]
                     # ____________________________________
 
                     # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
-                    newSender = senderVideo(cap, self.__GuardClients[-1])
-                    newSender.disabled[str, int].connect(self.disconnectClient)
-                    newSender.start()
+                    self.newSender = senderVideo(self.cap, self.__GuardClients[-1])
+
 
             else:
                 # информируем ПО охранника об отсутствии подключенных разрешенных камер
@@ -154,7 +155,7 @@ class socketServer(QObject, Thread):
 
     def waitTextData(self, socket):
         while True:
-            dataUser = socket.recv(512)
+            dataUser = socket.recv(200)
             dataUser = dataUser.decode("utf-8")
             if not dataUser:
                 break

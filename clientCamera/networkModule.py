@@ -31,9 +31,9 @@ class Socket(QObject, Thread):
         data = self.waitTextData()
         print(data)
         if (data == "readyGetVideo"):
-            self.sendVideo()
+            self.setSenderVideo()
 
-    def sendVideo(self):
+    def setSenderVideo(self):
         # создаем отправщика видео
         self.sender = senderVideo(self.__Socket)
         self.sender.start()

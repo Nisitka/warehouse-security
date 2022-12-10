@@ -47,7 +47,7 @@ class threadVideo(QObject, Thread):
             data = self.__Socket.recv(self.dataPackageSize)
             data = list(data)
 
-            print(len(data)) # кол-во эдементов в массиве
+            print(len(data))  # кол-во эдементов в массиве
             if (len(data) != self.dataPackageSize):
                 print("потеря данных!")
 
@@ -78,13 +78,3 @@ class threadVideo(QObject, Thread):
 
     def sendTextData(self, textMessage):
         self.__Socket.sendall(textMessage.encode("utf-8"))
-
-    # ожидание текстовой информации
-    def waitTextData(self):
-        while True:
-            dataServer = self.__Socket.recv(512)
-            dataServer = dataServer.decode("utf-8")
-            if not dataServer:
-                break
-            else:
-                return dataServer

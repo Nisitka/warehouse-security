@@ -19,53 +19,45 @@ class typeClient(enum.Enum):
     Camera = 2
 
 class guardClient(QObject, Thread):
-    dataPackageSize = 2048 * 1000 * 1000
+    getNewImageSignal = pyqtSignal()
 
-    def __init__(self, socket_, address_, loginGuard_):
+    def __init__(self, socket_, loginGuard_):
         QObject.__init__(self)
         Thread.__init__(self)
 
-        self.__loginGuard = loginGuard_
+        self.hVideo = 480
+        self.wVideo = 640
+        self.imageSize = self.hVideo * self.wVideo * 3
 
-        self.__socket = socket_
-        self.__address = address_
+        self.login = loginGuard_
 
-        self.__working = False
-        self.__init = False
+        # сокет взаимодействия с охранником
+        self.__Socket = socket_
 
-        # как только создаем клиента сразу же запускаем поток на принятие данных
-        self.start()
+        self.__work = True
 
-    def run(self):
-        self.__working = True
+    def send(self, data):
+        self.__Socket.send(data)
 
     def getSocket(self):
-        return self.__socket
+        return self.__Socket
 
-    def __stopGetData(self):
-        self.__working = False
+    def waitCommand(self):
+        command = self.__Socket.recv(200)
+        return command.decode("utf-8")
 
-    def __waitData(self):
-        while(self.__working):
-            try:
-                data = self.__socket.recv(self.dataPackageSize)
-            except:
-                print("не удалось получить данные")
+    # всегда ждет команды от охранника
+    def run(self):
+        while self.__work:
+            command = self.waitCommand()
+            if command == "Get":
+                # сообщаем об готовности принять новое изображение
+                self.getNewImageSignal.emit()
 
-            if not data:
-                print("данные не переданы!")
-
-    def remove(self):
-        self.__stopGetData()
-        self.__socket.close()
-
-        # self.destroyed.emit(str(self.__loginGuard), typeClient.Guard.value)
-        print("Клиент удален!")
-
-    def getLoginGuard(self):
-        return self.__loginGuard
+        sys.exit()
 
 class cameraClient(QObject, Thread):
+    updateImage = pyqtSignal()
 
     def __init__(self, socket_, loginCamera_):
         QObject.__init__(self)
@@ -75,57 +67,43 @@ class cameraClient(QObject, Thread):
         self.wVideo = 640
         self.imageSize = self.hVideo * self.wVideo * 3
 
+        self.login = loginCamera_
+
         # сокет взаимодействия с камерой
         self.__Socket = socket_
 
-        self.__login = loginCamera_
-
         self.__work = True
 
-    def getSocket(self):
-        return self.__Socket
+    def send(self, data):
+        self.__Socket.send(data)
 
-    def remove(self):
-        self.__work = False
+    # запросить изображение у камеры
+    def requestImage(self):
+        self.__Socket.sendall("Get".encode("utf-8"))
 
-    def read(self):
-        return self.__currentImage
+    def getCurrentImage(self):
+        return self.currentImage
 
     def acceptImage(self):
-        try:
-            data = self.__Socket.recv(self.imageSize)
-            data = list(data)
+        image = self.__Socket.recv(self.imageSize)
+        image = list(image)
 
-            # print(len(data))
-            if (len(data) != self.imageSize):
-                print("потеря данных!")
+        print(len(image))  # кол-во эдементов в массиве
+        if (len(image) != self.imageSize):
+            print("потеря данных!")
 
-                # запрос следующего изображения
-                self.sendTextData("Get")
-            else:
-                # print("accept!")
-                self.__currentImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
+        else:
+            self.currentImage = numpy.array(image).reshape(self.hVideo, self.wVideo, 3)
 
-                # сообщаем о том, что готовы к след. изображению
-                self.sendTextData("Get")
-        except:
-            print("соединение с камерой потеряно!")
-            # сообщаем ядру об потери соединения
+            cv2.imwrite("img.jpg", self.currentImage)
+            self.currentImage = cv2.imread("img.jpg")
 
-            # прекращаем получение данных
-            self.__work = False
+            self.updateImage.emit()
+            print("accept")
 
-    def sendTextData(self, textMessage):
-        self.__Socket.sendall(textMessage.encode("utf-8"))
-
+    # всегда ждет принятие нового изображения
     def run(self):
-        # получение данных
         while self.__work:
-            try:
-                self.acceptImage()
+            self.acceptImage()
 
-            except:
-                print("данные с камеры не получены!")
-
-        print("получение данных с камеры прекращено")
         sys.exit()

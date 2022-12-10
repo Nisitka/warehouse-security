@@ -24,35 +24,46 @@ class senderVideo(QObject, Thread):
         self.work = True
 
     def run(self):
-        self.sendImagesData()
+        self.readImage()
         while self.work:
-            # ждем инфы об принятии файла
-            dataServer = self.waitData()
+            '''
+            # ждем запроса изображения
+            dataServer = self.waitCommand()
             if (dataServer == "Get"):
+                self.readImage()
                 self.sendImagesData()
+            '''
+            self.__socketServer.recv(200)
+            self.readImage()
+            self.sendImagesData()
 
         # закрываем поток
         sys.exit()
 
-    def sendImagesData(self):
+    def readImage(self):
         # считываем изображение с камеры
         _, image = self.cap.read()
 
-        # подгоняем под размер для интерфейса ПО охранника
-        image = cv2.resize(image, dsize=(640, 480))
+        self.currentImage = image
 
+    def sendImagesData(self):
+        # подгоняем под размер для интерфейса ПО охранника
+        # image = cv2.resize(self.currentImage, dsize=(640, 480))
+
+        image = self.currentImage
+        cv2.imwrite("img.jpg", image)
         # преобразуем в одномерный numpy массив
         outArr = image.reshape((-1,))
 
         try:
-            self.__socketServer.send(outArr)
+            self.__socketServer.sendall(outArr)
         # соединение разорвано
         except:
             print("соединение разорвано")
 
         print("send")
 
-    def waitData(self):
+    def waitCommand(self):
         while True:
             try:
                 dataServer = self.__socketServer.recv(200)
