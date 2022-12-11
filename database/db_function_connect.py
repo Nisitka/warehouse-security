@@ -143,6 +143,10 @@ class dbConnect:
         cursor.execute('INSERT INTO access_attempts (computer_id, datetime) VALUES (?, ?)', (computer_id, datetime, ))
         connection.commit()
         dbConnect.connectionClose(connection, cursor)
+
+    def getAccessAttempts(): # функция для вывода всех неудачных попыток входа в систему
+        connection, cursor = dbConnect.connectionOpen()
+        cursor.execute('SELECT computer_id, datetime FROM access_attempts ORDER BY ')
 dbConnect.editPassword('ivanov', '1', '2')
 
 
