@@ -32,7 +32,7 @@ class Core(QObject):
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.initCamerasInfo[bool].connect(self.displayInfoCameras)
         self.netModule.importVideoSignal[QPixmap, QPixmap].connect(self.getVideoServer)
-        self.netModule.startAcceptData.connect(self.acceptData)
+        # self.netModule.startAcceptData.connect(self.acceptData)
         self.netModule.disconnectServerSignal.connect(self.eventDisconnectServer)
 
     def eventDisconnectServer(self):
@@ -45,7 +45,7 @@ class Core(QObject):
 
     def displayInfoCameras(self, status):
         if not status:
-            print("AAAAAAAAA")
+            print("сигнал интерфейсу об отсутсвии камер")
 
     def authorizationUser(self, statusKey):
         if (statusKey):

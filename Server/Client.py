@@ -110,7 +110,7 @@ class guardClient(QObject, Thread):
                 # принимаем новое изображение
                 self.acceptNewImage()
 
-            # запросить инфу об клиенте
+            # запросить инфу об клиенте (для теста!!!!!)
             if command == "getInfoVisits":
                 self.getUserInfoSignal.emit(str(self.__login))
 

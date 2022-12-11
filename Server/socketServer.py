@@ -12,6 +12,9 @@ import cv2
 
 import sys
 
+import pickle
+from packerData import Packer
+
 class socketServer(QObject, Thread):
     # Сигналы:
     # запрос на подключение клиента
@@ -46,9 +49,12 @@ class socketServer(QObject, Thread):
         self.__working = True
     # преобразует полученные данные от потонциального клиента в логин и пароль
     def __decodeUserData(self):
-        dataUser = self.__newConnection.recv(200)
-        dataUser = dataUser.decode("utf-8")
-        print(dataUser)
+        # принимаем данные для авторизации пользователя
+        dataBits = self.__newConnection.recv(2048)
+
+        # преобразуем биты в объект класса Packer
+        data = pickle.loads(dataBits)
+        dataUser = data.getData()
 
         # логин и пароль разделены символом '/'
         dividedData = dataUser.partition('/')
@@ -75,6 +81,7 @@ class socketServer(QObject, Thread):
 
         sys.exit()
 
+    # добавление нового клиента
     def addNewClient(self, login, tClient):
         print("client add! " + str(tClient))
 
@@ -84,38 +91,37 @@ class socketServer(QObject, Thread):
             self.__GuardClients.append(guardClient(self.__newConnection, login))
 
             # информируем об удачной инициализации ПО охранника
-            self.sendTextData(self.__GuardClients[-1].getSocket(), "initSuccessfully")
+            dataUser_DataBase = "Данные аккаунта клинта-охранника"
+            self.sendPacker(self.__GuardClients[-1].getSocket(), dataUser_DataBase, 'initUser')
 
-            # дожидаемся готовности клиента и только тогда отправляем инфу об камерах
-            data = self.waitTextData(self.__GuardClients[-1].getSocket())
-            print(data)
-
-            # выбирается нужная камера (если такой нет, то сообщаем об этом)
+            # выбирается нужная камера по логину охранника (если такой нет, то сообщаем об этом)
             self.cap = self.__requestCamera(self.__GuardClients[-1].getLogin())
             if self.cap is None:
                 print("камеры для охранника не найдено")
 
                 # информируем ПО охранника об отсутствии подключенных разрешенных камер
-                self.sendTextData(self.__GuardClients[-1].getSocket(), "notCameras")
+                self.sendPacker(self.__GuardClients[-1].getSocket(), None, 'infoCameras')
 
             else:
-                self.sendTextData(self.__GuardClients[-1].getSocket(), "readyCameras")
+                # информируем ПО охранника об подключеннии разрешенных камер
+                infoCameras = "информация об камерах и все такое"
+                self.sendPacker(self.__GuardClients[-1].getSocket(), infoCameras, 'infoCameras')
 
-                # дожидаемся ответа кдиента об принятии инфы об камерах
-                data = self.waitTextData(self.__GuardClients[-1].getSocket())
-                print(data)
+                # добавляем камеру к клиенту охранника
+                self.__GuardClients[-1].addCamera(self.cap)
 
-                # результат запроса (в этот момент клиент готов принимать карнинки)
-                data = self.waitTextData(self.__GuardClients[-1].getSocket())
-                print(data)
-                if (data == "readyGetVideo"):
-                    self.__GuardClients[-1].addCamera(self.cap)
-                    # запустить клиент-охранника в основном режиме
-                    self.__GuardClients[-1].start()
+                # запустить клиент-охранника в основном режиме
+                self.__GuardClients[-1].start()
 
         else:
             # добаляем камеру в общий список подкл. камер
             self.__CameraClients.append(cameraClient(self.__newConnection, login))
+
+            # проверяем, есть ли клинты-охранники, которые могут её видеть
+            # если да, то добаляем камеры к этим клиентам
+            '''
+            какой-то код
+            '''
 
             # запускаем клиента (начинает ожидание передачи данных)
             self.__CameraClients[-1].start()
@@ -147,23 +153,10 @@ class socketServer(QObject, Thread):
         print("client lock!")
 
         # информируем об неудачной попытке инициализации
-        self.sendTextData(self.__newConnection, "initFail")
+        self.sendPacker(self.__GuardClients[-1].getSocket(), None, 'initUser')
 
         # отключаем этого клиента
         self.__closeSocket(self.__newConnection)
-
-    def waitTextData(self, socket):
-        while True:
-            dataUser = socket.recv(200)
-            dataUser = dataUser.decode("utf-8")
-            if not dataUser:
-                break
-            else:
-                return dataUser
-
-    # отправка данных через указанный сокет (кому, что)
-    def sendTextData(self, socket, data):
-        socket.sendall(codecs.encode(str(data), 'UTF-8'))
 
     # отключаем всех клиентов
     def __offClients(self):
@@ -191,6 +184,14 @@ class socketServer(QObject, Thread):
             print("Это windows детка")
 
         socket.close()  # отключаем сокет
+
+    # отправка команды с данными
+    def sendPacker(self, socket, data, command):
+        outBits = pickle.dumps(Packer(command, data))
+        socket.send(outBits)
+
+    def sendTextData(self, socket, data):
+        socket.sendall(codecs.encode(str(data), 'UTF-8'))
 
     def stop(self):
         # выходим из ожидания подключения клиента

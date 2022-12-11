@@ -14,7 +14,10 @@ import codecs
 
 import sys
 
-from threadersAcceptData import threadAcceptCommand
+import pickle
+from packerData import Packer
+
+#from threadersAcceptData import threadAcceptCommand
 
 class Socket(QObject, Thread):
     importVideoSignal = pyqtSignal(QPixmap, QPixmap)
@@ -35,7 +38,78 @@ class Socket(QObject, Thread):
         QObject.__init__(self)
         Thread.__init__(self)
 
+        self.hVideo = 480
+        self.wVideo = 640
+        self.numPixImage = self.hVideo * self.wVideo * 3
+
         self.__working = True
+
+    def run(self):
+        while self.__working:
+            print("_")
+            self.getDataServer()
+
+        print("Принятие изображений прекращено!")
+        sys.exit()
+
+    def getDataServer(self):
+        #try:
+            # принимаем любые данные
+            dataBits = self.__Socket.recv(self.numPixImage * 2)
+
+            # преобразуем биты в объект класса Packer
+            data = pickle.loads(dataBits)
+            command = data.getCommand()
+
+            #   Дейсвия в зависимости от команды
+            # принять изображение для видео
+            if (command == "acceptShot"):
+                npImage = numpy.array(data.getData()).reshape(self.hVideo, self.wVideo, 3)
+                cv2.imwrite("img1.jpg", npImage)
+                # cv2.imwrite("img2.jpg", npImage)
+
+                pix = QPixmap("img1.jpg")
+
+                self.importVideoSignal.emit(pix, pix)
+
+                # запрос на следующие изображение
+                self.sendPacker(None, "getShot")
+
+                # запрос информации об пользователе
+                self.sendPacker(None, "getInfoVisits")
+
+            #
+            if (command == "setInfoVisits"):
+                print("Принятие информации об визитах")
+
+            # установка информации об пользователе (охраннике)
+            if (command == "initUser"):
+                infoUser = data.getData()
+                if infoUser is None:
+                    self.initUserInfo.emit(False)
+                    print("Неверный логин или пароль")
+                else:
+                    self.initUserInfo.emit(True)
+                    print(infoUser)
+
+            if (command == "infoCameras"):
+                infoCameras = data.getData()
+                if infoCameras is None:
+                    print("нет разрешенных камер")
+                    self.initCamerasInfo.emit(False)
+                else:
+                    print("разрешенные камеры есть: " + infoCameras)
+                    self.initCamerasInfo.emit(True)
+
+            '''
+            # except:
+            print("соединение с сервером потеряно!")
+            # сообщаем ядру об потери соединения
+            self.disconnectServer.emit()
+
+            # прекращаем получение данных
+            self.__working = False
+            '''
 
     def connectServer(self, host, port, login, password):
         # инициализируем свой сокет
@@ -43,69 +117,26 @@ class Socket(QObject, Thread):
         self.__Socket = socketNetwork.socket(socketNetwork.AF_INET, socketNetwork.SOCK_STREAM)
         self.__Socket.setsockopt(socketNetwork.SOL_SOCKET, socketNetwork.SO_REUSEADDR, 1)
         # соеденяем его с сервером
-        try:
-            self.__Socket.connect((host, port))
-            # отправляем логин с паролем
-            message = str(login) + '/' + str(password)  # шифр из логина и пароля
-            self.sendTextData(message)
+        # try:
+        self.__Socket.connect((host, port))
+            # отправляем запрос на подключение
+        authData = str(login) + '/' + str(password)  # шифр из логина и пароля
+        self.sendPacker(authData, "authUser")
 
-            # ждем результатов аутентификации
-            dataServer = self.waitTextData()
+            # запускаем модуль на принятие команд с сервера
+        self.start()
 
-            if (dataServer == "initSuccessfully"):
-                # информиркем ядро приложения об результатах аутентификации
-                self.initUserInfo.emit(True)
-
-                # информируем сервер об принятии результатов авторизации
-                self.sendTextData("getInfoInit")
-
-                # ждем информации об камерах
-                dataCameras = self.waitTextData()
-                # информируем сервер об принятии инфы об камерах
-                self.sendTextData("getInfoCameras")
-
-                # сообщаем ядру об присутсвии разрешенных камер
-                self.initCamerasInfo.emit(dataCameras == "readyCameras")
-
-                # запускаем прием информации с сервера
-                self.startAcceptData.emit()
-
-            else:
-                # информиркем ядро приложения об результатах аутентификации
-                self.initUserInfo.emit(False)
-
-        except:
-            print("неверные данные для авторизации")
-
-    # получение изображений от сервера
-    def acceptData(self):
-        # создаем примщика данных и команд
-        self.threadAcceptData = threadAcceptCommand(self.__Socket)
-        self.threadAcceptData.importVideo[QPixmap].connect(self.outVideo)
-        self.threadAcceptData.disconnectServer.connect(self.disconnectServer)
-
-        self.threadAcceptData.start()
+        #except:
+            #print("неверные данные для авторизации!!!")
 
     def disconnectServer(self):
-        # очищаем ссылку
-        del self.threadAcceptVideo
-
         # сообщаем ядру об отключении сервера
         self.disconnectServerSignal.emit()
 
     def outVideo(self, pix):
         self.importVideoSignal.emit(pix, pix)
 
-    # отправка текстовых данных
-    def sendTextData(self, textMessage):
-        self.__Socket.sendall(textMessage.encode("utf-8"))
-
-    # ожидание текстовой информации
-    def waitTextData(self):
-        while True:
-            dataServer = self.__Socket.recv(512)
-            dataServer = dataServer.decode("utf-8")
-            if not dataServer:
-                break
-            else:
-                return dataServer
+    # отправка команды с данными
+    def sendPacker(self, data, command):
+        outBits = pickle.dumps(Packer(command, data))
+        self.__Socket.send(outBits)

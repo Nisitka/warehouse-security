@@ -9,6 +9,9 @@ import sys
 
 from senderVideoModule import senderVideo
 
+import pickle
+from packerData import Packer
+
 class Socket(QObject, Thread):
     resultConnect = pyqtSignal(bool)
     disabledConnectSignal = pyqtSignal()
@@ -37,7 +40,7 @@ class Socket(QObject, Thread):
             # отправляем логин с паролем
             print(str(login) + '/' + str(password))
             message = str(login) + '/' + str(password)  # шифр из логина и пароля
-            self.sendTextData(message)
+            self.sendPacker(message, 'initCamera')
 
             # ждем команды о том, что сервер готов принмать изображения
             command = self.waitTextData()
@@ -46,6 +49,11 @@ class Socket(QObject, Thread):
 
         except:
             self.resultConnect.emit(False)
+
+    # отправка команды с данными
+    def sendPacker(self, data, command):
+        outBits = pickle.dumps(Packer(command, data))
+        self.__Socket.send(outBits)
 
     def setSenderVideo(self):
         # создаем отправщика видео
