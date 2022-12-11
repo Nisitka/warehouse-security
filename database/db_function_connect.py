@@ -4,7 +4,7 @@ import hashlib
 class DataBase:
 
     def __init__(self, dirDataBase):
-        self.connection, self.cursor = self.connection(dirDataBase)
+        self.connection, self.cursor = self.connectionOpen(dirDataBase)
 
     def connectionOpen(self, dir='db.sqlite3'):
         try:
