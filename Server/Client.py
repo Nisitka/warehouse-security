@@ -19,6 +19,8 @@ import pickle
 from packerData import Packer
 from processingImages import processingImage
 
+from PIL import Image
+
 # типы клиентов
 class typeClient(enum.Enum):
     Guard = 1
@@ -83,7 +85,6 @@ class guardClient(QObject, Thread):
 
         outBits = pickle.dumps(Packer("setInfoVisits", outImage))
         self.__Socket.send(outBits)
-        print("send")
 
     def waitData(self):
         try:
@@ -133,18 +134,23 @@ class guardClient(QObject, Thread):
 class cameraClient(QObject, Thread):
     updateImage = pyqtSignal()
 
-    def __init__(self, socket_, loginCamera_):
+    def __init__(self, socket_, loginCamera_, type=1, IPv4 = None):
         QObject.__init__(self)
         Thread.__init__(self)
+
+        self.__type = type
+        if (self.__type == 2):
+            self.cap = cv2.VideoCapture('http://' + str(IPv4) +':8080/video')
+            #self.cap = cv2.VideoCapture('http://192.168.3.9:8080/video')
+        else:
+            # сокет взаимодействия с камерой
+            self.__Socket = socket_
 
         self.hVideo = 480
         self.wVideo = 640
         self.imageSize = self.hVideo * self.wVideo * 3
 
         self.login = loginCamera_
-
-        # сокет взаимодействия с камерой
-        self.__Socket = socket_
 
         self.__work = True
 
@@ -153,32 +159,44 @@ class cameraClient(QObject, Thread):
 
     # запросить изображение у камеры
     def requestImage(self):
-        self.__Socket.sendall("get".encode("utf-8"))
+        if (self.__type == 1):
+            self.__Socket.sendall("get".encode("utf-8"))
+        else:
+            self.acceptImage()
 
     def getCurrentImage(self):
         return self.currentImage
 
     def acceptImage(self):
-        image = self.__Socket.recv(self.imageSize)
-        image = list(image)
+        if (self.__type == 1):
+            image = self.__Socket.recv(self.imageSize)
+            image = list(image)
 
-        # print(len(image))  # кол-во эдементов в массиве
-        if (len(image) != self.imageSize):
-            print("потеря данных!")
+            # print(len(image))  # кол-во эдементов в массиве
+            if (len(image) != self.imageSize):
+                print("потеря данных!")
+
+            else:
+                self.currentImage = numpy.array(image).reshape(self.hVideo, self.wVideo, 3)
+
+                # костыль чтобы картинка выглядела не как в 80-х
+                #   (потом будет реализовано сохранение картинрк -> перевод их в видео)
+                cv2.imwrite("img.jpg", self.currentImage)
+                self.currentImage = cv2.imread("img.jpg")
 
         else:
-            self.currentImage = numpy.array(image).reshape(self.hVideo, self.wVideo, 3)
+            _, image = self.cap.read()
 
-            # костыль чтобы картинка выглядела не как в 80-х
-            #   (потом будет реализовано сохранение картинрк -> перевод их в видео)
-            cv2.imwrite("img.jpg", self.currentImage)
-            self.currentImage = cv2.imread("img.jpg")
+            self.currentImage = cv2.resize(image, (self.wVideo, self.hVideo))
 
-            self.updateImage.emit()
+        # сообщаем об измененном изображении
+        self.updateImage.emit()
 
     def remove(self):
         self.__work = False
-        self.__closeSocket()
+
+        if (self.__type == 1):
+            self.__closeSocket()
 
     def __closeSocket(self):
         try:
@@ -191,6 +209,10 @@ class cameraClient(QObject, Thread):
 
     # всегда ждет принятие нового изображения
     def run(self):
+        if (self.__type == 1):
+            # сообщаем камере что готовы принимать видео
+            self.__Socket.sendall(codecs.encode("readyGetVideo", 'UTF-8'))
+
         while self.__work:
             try:
                 self.acceptImage()
@@ -199,3 +221,6 @@ class cameraClient(QObject, Thread):
                 print("Соединение с камерой потеряно")
 
         sys.exit()
+
+    def sendTextData(self, socket, data):
+        socket.sendall(codecs.encode(str(data), 'UTF-8'))

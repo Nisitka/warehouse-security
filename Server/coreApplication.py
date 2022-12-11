@@ -32,10 +32,14 @@ class Core(QObject):
         # связанных с соответствующим сигналом
         self.__gui.getMainWindow().startServerSignal[int, int].connect(self.startServer)
         self.__gui.getMainWindow().stopServerSignal.connect(self.stopServer)
+        self.__gui.getMainWindow().addCameraSignal[str, str].connect(self.addSmartCamera)
 
         # ответы базы данных на запрос от сервера
         self.__DataBase.authorizationClient[str, str, int].connect(self.__authorizationClient)
         self.__DataBase.blockingClient.connect(self.__blockingClient)
+
+    def addSmartCamera(self, login, IPv4):
+        self.__server.getSocket().addCamerasClient(None, login, 2, IPv4)
 
     def startServer(self, port, numClients):
         # при каждом запуске создается новый объект класса сервер,

@@ -67,6 +67,9 @@ class socketServer(QObject, Thread):
     def run(self):
         print("Server run on " + str(self.__address) + ":" + str(self.__port))
 
+        # тест!!!
+        #self.addCamerasClient(None, "smart", 2, '192.168.3.9')
+
         # запуск ожидания нового подключения
         while(self.__working):
             # ожидание подключения: новый сокет и адрес клиента.
@@ -115,7 +118,8 @@ class socketServer(QObject, Thread):
 
         else:
             # добаляем камеру в общий список подкл. камер
-            self.__CameraClients.append(cameraClient(self.__newConnection, login))
+            self.addCamerasClient(self.__newConnection, login)
+            #self.__CameraClients.append(cameraClient(self.__newConnection, login))
 
             # проверяем, есть ли клинты-охранники, которые могут её видеть
             # если да, то добаляем камеры к этим клиентам
@@ -123,11 +127,15 @@ class socketServer(QObject, Thread):
             какой-то код
             '''
 
-            # запускаем клиента (начинает ожидание передачи данных)
+            # запускаем клиента-камеру (начинает ожидание передачи данных)
             self.__CameraClients[-1].start()
 
-            # сообщаем камере что готовы принимать видео
-            self.sendTextData(self.__newConnection, "readyGetVideo")
+    def addCamerasClient(self, socket, login, type=1, IPv4=None):
+        if (type == 1):
+            self.__CameraClients.append(cameraClient(socket, login))
+        else:
+            self.__CameraClients.append(cameraClient(None, login, 2, IPv4))
+
 
     def __requestCamera(self, loginGuard):
         if len(self.__CameraClients) > 0:

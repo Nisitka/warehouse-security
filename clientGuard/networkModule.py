@@ -55,7 +55,7 @@ class Socket(QObject, Thread):
     def getDataServer(self):
         #try:
             # принимаем любые данные
-            dataBits = self.__Socket.recv(self.numPixImage * 2)
+            dataBits = self.__Socket.recv(self.numPixImage * 10)
 
             # преобразуем биты в объект класса Packer
             data = pickle.loads(dataBits)

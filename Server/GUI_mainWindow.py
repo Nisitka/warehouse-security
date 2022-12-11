@@ -18,6 +18,9 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
     startServerSignal = pyqtSignal(int, int)  # сигнал для запуска сервера (порт, макс. кол-во клиентов)
     stopServerSignal = pyqtSignal()           # сигнал для остановки сервера
 
+    # сигнал добавления камеры
+    addCameraSignal = pyqtSignal(str, str)  # логин, IPv4
+
     def __init__(self):
         self.__serverWorking = False
 
@@ -137,6 +140,15 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
                  }
                 """)
 
+    def addCamera(self):
+        print("добавлена камера")
+
+        login = self.loginCamerasLineEdit.text()
+        IPv4 = self.addressCamerasLineEdit.text()
+        self.addNewClient(login, IPv4, typeClient.Camera.value)
+
+        self.addCameraSignal.emit(login, IPv4)
+
     def addNewClient(self, login, address, tClient):
 
         if (tClient == typeClient.Guard.value):
@@ -201,6 +213,9 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         # разблокирование таблицы с клиентами
         self.guardsTableWidget.setEnabled(True)
 
+        # кнопка добавления камеры
+        self.addCameraButton.setEnabled(True)
+
     def stopServer(self):
         self.__serverWorking = False
 
@@ -219,6 +234,9 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
         # очистка полей таблицы от клиентов и блокировка таблицы
         self.__clearClientsTable()
         self.guardsTableWidget.setEnabled(False)
+
+        # кнопка добавления камеры
+        self.addCameraButton.setEnabled(False)
 
     # установка визуала кнопки запуска\остановки сервера
     def __setStartButton(self):
@@ -306,6 +324,14 @@ class mainWindow(QtWidgets.QMainWindow, mainWindowGui.Ui_Form):
 
         # блокировка таблицы до включения сервера
         self.guardsTableWidget.setEnabled(False)
+
+        # кнопка добавления новой камеры
+        self.addCameraButton.setEnabled(False)
+        self.addCameraButton.clicked.connect(self.addCamera)
+
+        # значения по умолчанию для теста
+        self.loginCamerasLineEdit.setText('smartCamera')
+        self.addressCamerasLineEdit.setText('192.168.3.9')
 
     def __setNeuralNet(self):
         #  гифка для нейронной сети
