@@ -75,9 +75,6 @@ class Socket(QObject, Thread):
                 # запрос на следующие изображение
                 self.sendPacker(None, "getShot")
 
-                # запрос информации об пользователе
-                self.sendPacker(None, "getInfoVisits")
-
             #
             if (command == "setInfoVisits"):
                 print("Принятие информации об визитах")

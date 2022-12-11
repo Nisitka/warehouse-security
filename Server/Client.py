@@ -83,9 +83,6 @@ class guardClient(QObject, Thread):
         outBits = pickle.dumps(Packer("acceptShot", outImage))
         self.__Socket.send(outBits)
 
-        outBits = pickle.dumps(Packer("setInfoVisits", outImage))
-        self.__Socket.send(outBits)
-
     def waitData(self):
         try:
             dataBits = self.__Socket.recv(2048)
@@ -141,7 +138,6 @@ class cameraClient(QObject, Thread):
         self.__type = type
         if (self.__type == 2):
             self.cap = cv2.VideoCapture('http://' + str(IPv4) +':8080/video')
-            #self.cap = cv2.VideoCapture('http://192.168.3.9:8080/video')
         else:
             # сокет взаимодействия с камерой
             self.__Socket = socket_

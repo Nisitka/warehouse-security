@@ -67,9 +67,6 @@ class socketServer(QObject, Thread):
     def run(self):
         print("Server run on " + str(self.__address) + ":" + str(self.__port))
 
-        # тест!!!
-        #self.addCamerasClient(None, "smart", 2, '192.168.3.9')
-
         # запуск ожидания нового подключения
         while(self.__working):
             # ожидание подключения: новый сокет и адрес клиента.
