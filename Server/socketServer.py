@@ -7,9 +7,8 @@ import socket as socketNetwork
 from Client import guardClient, typeClient, cameraClient
 
 import codecs
-from sendersData import senderVideo
 
-import cv2  # это временно!!!
+import cv2
 
 import sys
 
@@ -25,8 +24,6 @@ class socketServer(QObject, Thread):
     __GuardClients = []
     # список камер
     __CameraClients = []
-    # список отправщиков видео
-    __sendersVideo = []
 
     # переменные для временного хранения очередного подключения
     __newConnection = "сокет"
@@ -108,19 +105,13 @@ class socketServer(QObject, Thread):
                 data = self.waitTextData(self.__GuardClients[-1].getSocket())
                 print(data)
 
-                # отправляем запрос на отправку видео
-                self.sendTextData(self.__GuardClients[-1].getSocket(), "sendVideo")
-
                 # результат запроса (в этот момент клиент готов принимать карнинки)
                 data = self.waitTextData(self.__GuardClients[-1].getSocket())
                 print(data)
                 if (data == "readyGetVideo"):
+                    self.__GuardClients[-1].addCamera(self.cap)
                     # запустить клиент-охранника в основном режиме
                     self.__GuardClients[-1].start()
-
-                    # оргнизация передача данных из камеры клиенту-охраннику в отдельном потоке
-                    self.newSender = senderVideo(self.cap, self.__GuardClients[-1])
-                    self.newSender.run()  # запускаем его
 
         else:
             # добаляем камеру в общий список подкл. камер

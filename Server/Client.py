@@ -6,7 +6,7 @@ import codecs
 
 import enum
 
-import cv2  # это временно!!!
+import cv2
 
 import os
 import sys
@@ -14,6 +14,10 @@ import sys
 from PyQt5.QtGui import QImage, QPixmap, QColor
 
 import numpy
+import pickle
+
+from packerData import Packer
+from processingImages import processingImage
 
 # типы клиентов
 class typeClient(enum.Enum):
@@ -27,7 +31,7 @@ class guardClient(QObject, Thread):
     getNewImageSignal = pyqtSignal()
 
     # запросить информацию об клиенте
-    getUserInfoSignal = pyqtSignal()
+    getUserInfoSignal = pyqtSignal(str)  # по логину
 
     def __init__(self, socket_, loginGuard_):
         QObject.__init__(self)
@@ -44,36 +48,71 @@ class guardClient(QObject, Thread):
 
         self.__work = True
 
+        self.__Cameras = []
+
     def getLogin(self):
         return self.__login
-
-    def send(self, data):
-        self.__Socket.send(data)
 
     def getSocket(self):
         return self.__Socket
 
-    def waitCommand(self):
-        command = self.__Socket.recv(200)
-        return command.decode("utf-8")
+    # добавление камеры клиенту
+    def addCamera(self, cameraClient):
+        self.__Cameras.append(cameraClient)
+
+        # связываем камеру и клиента
+        cameraClient.updateImage.connect(self.sendImageGuard)
+        self.acceptNewImage()
+
+    def acceptNewImage(self):
+        #numCamera = numCamera_
+        numCamera = -1  # временно
+
+        self.__Cameras[numCamera].requestImage()
+
+    # отправка изображения с камеры охраннику
+    def sendImageGuard(self):
+        #numCamera = numCamera_
+        numCamera = -1  # временно
+
+        # берем изображение с клиента-камеры и обрабатываем нейро-ми сетями
+        outImage = processingImage(self.__Cameras[numCamera].getCurrentImage())
+
+        outBits = pickle.dumps(Packer("acceptShot", outImage))
+        self.__Socket.send(outBits)
+
+        outBits = pickle.dumps(Packer("setInfoVisits", outImage))
+        self.__Socket.send(outBits)
+        print("send")
+
+    def waitData(self):
+        try:
+            dataBits = self.__Socket.recv(2048)
+            # преобразуем биты в объект класса Packer
+            data = pickle.loads(dataBits)
+
+            return data
+
+        except:
+            # отправка сигнла в ядро об потери соединения с  клиентом-охранником
+            print("соединение с охранником потеряно!")
 
     # всегда ждет команды от охранника
     def run(self):
         while self.__work:
-            try:
-                command = self.waitCommand()
-                #   Действия по командам:
-                # запросить передачу нового кадра у сервера
-                if command == "getShot":
-                    # сообщаем об готовности принять новое изображение
-                    self.getNewImageSignal.emit()
+            # принятие команды
+            dataPacker = self.waitData()
+            command = dataPacker.getCommand()
 
-                # запросить инфу об клиенте
-                if cammand == "getInfoUser":
-                    self.getUserInfoSignal.emit()
+            #   Действия по командам:
+            # запросить передачу нового кадра у сервера
+            if command == "getShot":
+                # принимаем новое изображение
+                self.acceptNewImage()
 
-            except:
-                print("соединение с охранником потеряно")
+            # запросить инфу об клиенте
+            if command == "getInfoVisits":
+                self.getUserInfoSignal.emit(str(self.__login))
 
         sys.exit()
 

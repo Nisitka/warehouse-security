@@ -32,16 +32,16 @@ class Core(QObject):
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.initCamerasInfo[bool].connect(self.displayInfoCameras)
         self.netModule.importVideoSignal[QPixmap, QPixmap].connect(self.getVideoServer)
-        self.netModule.startAcceptVideo.connect(self.acceptVideo)
+        self.netModule.startAcceptData.connect(self.acceptData)
         self.netModule.disconnectServerSignal.connect(self.eventDisconnectServer)
 
     def eventDisconnectServer(self):
         self.guiApp.mainWin.eventDisconnectServer()
 
-    def acceptVideo(self):
-        print("start accept video!")
+    def acceptData(self):
+        print("start accept data!")
         # запускаем в сетевом модуле принятие видео
-        self.netModule.acceptVideo()
+        self.netModule.acceptData()
 
     def displayInfoCameras(self, status):
         if not status:

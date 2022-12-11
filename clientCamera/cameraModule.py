@@ -17,6 +17,7 @@ class Camera(QObject, Thread):
 
         # создать новый объект камеру
         self.cap = cv2.VideoCapture(0)
+        #self.cap = cv2.VideoCapture('http://192.168.3.9:8080')
 
         self.__work = True
 
@@ -28,6 +29,7 @@ class Camera(QObject, Thread):
             #try:
                 # считываем изображение с камеры
                 _, image = self.cap.read()
+                #print(image)
 
                 self.__currentImage = image
                 cv2.imwrite("img.jpg", image)

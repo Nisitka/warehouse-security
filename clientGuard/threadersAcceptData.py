@@ -18,7 +18,7 @@ import sys
 
 from packerData import Packer
 
-class threadVideo(QObject, Thread):
+class threadAcceptCommand(QObject, Thread):
     # сообщаем ядру о потери соединения
     disconnectServer = pyqtSignal()
     importVideo = pyqtSignal(QPixmap)
@@ -48,7 +48,7 @@ class threadVideo(QObject, Thread):
 
     def getDataServer(self):
         try:
-            dataBits = self.__Socket.recv(self.dataPackageSize * 20)
+            dataBits = self.__Socket.recv(self.dataPackageSize * 2)
 
             # преобразуем биты в объект класса Packer
             data = pickle.loads(dataBits)
@@ -64,8 +64,15 @@ class threadVideo(QObject, Thread):
 
                 self.importVideo.emit(pix)
 
-                # сообщаем о том, что готовы к след. изображению
-                self.sendTextData("getShot")
+                # запрос на следующие изображение
+                self.sendPacker(None, "getShot")
+
+                # запрос информации об пользователе
+                self.sendPacker(None, "getInfoVisits")
+
+            # установка информации об пользователе (охраннике)
+            if (data.getCommand() == "setInfoVisits"):
+                print("Принятие информации об аккаунте")
 
         except:
             print("соединение с сервером потеряно!")
@@ -75,7 +82,10 @@ class threadVideo(QObject, Thread):
             # прекращаем получение данных
             self.__working = False
 
-
+    # отправить данные с командой
+    def sendPacker(self, data, command):
+        outBits = pickle.dumps(Packer(command, data))
+        self.__Socket.send(outBits)
 
     def sendTextData(self, textMessage):
         self.__Socket.sendall(textMessage.encode("utf-8"))

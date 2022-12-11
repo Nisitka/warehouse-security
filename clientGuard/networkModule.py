@@ -14,7 +14,7 @@ import codecs
 
 import sys
 
-from threadersAcceptData import threadVideo
+from threadersAcceptData import threadAcceptCommand
 
 class Socket(QObject, Thread):
     importVideoSignal = pyqtSignal(QPixmap, QPixmap)
@@ -26,7 +26,7 @@ class Socket(QObject, Thread):
     initCamerasInfo = pyqtSignal(bool)
 
     # запрос ядру на принятие изображений с сервера
-    startAcceptVideo = pyqtSignal()
+    startAcceptData = pyqtSignal()
 
     # сообщаем ядру о потери соединения
     disconnectServerSignal = pyqtSignal()
@@ -63,22 +63,13 @@ class Socket(QObject, Thread):
                 dataCameras = self.waitTextData()
                 # информируем сервер об принятии инфы об камерах
                 self.sendTextData("getInfoCameras")
-                if (dataCameras == "readyCameras"):
-                    # сообщаем ядру об присутсвии разрешенных камер
-                    self.initCamerasInfo.emit(True)
 
-                    # ждем запроса на отправку видео
-                    request = self.waitTextData()
-                    print(request)
+                # сообщаем ядру об присутсвии разрешенных камер
+                self.initCamerasInfo.emit(dataCameras == "readyCameras")
 
-                    # подготовка к принятию видео
+                # запускаем прием информации с сервера
+                self.startAcceptData.emit()
 
-                    # запускаем прием видео
-                    self.startAcceptVideo.emit()
-
-                else:
-                    # сообщаем ядру об отсутсвии разрешенных камер
-                    self.initCamerasInfo.emit(False)
             else:
                 # информиркем ядро приложения об результатах аутентификации
                 self.initUserInfo.emit(False)
@@ -87,13 +78,13 @@ class Socket(QObject, Thread):
             print("неверные данные для авторизации")
 
     # получение изображений от сервера
-    def acceptVideo(self):
-        # создаем примщика видео потока
-        self.threadAcceptVideo = threadVideo(self.__Socket)
-        self.threadAcceptVideo.importVideo[QPixmap].connect(self.outVideo)
-        self.threadAcceptVideo.disconnectServer.connect(self.disconnectServer)
+    def acceptData(self):
+        # создаем примщика данных и команд
+        self.threadAcceptData = threadAcceptCommand(self.__Socket)
+        self.threadAcceptData.importVideo[QPixmap].connect(self.outVideo)
+        self.threadAcceptData.disconnectServer.connect(self.disconnectServer)
 
-        self.threadAcceptVideo.start()
+        self.threadAcceptData.start()
 
     def disconnectServer(self):
         # очищаем ссылку
