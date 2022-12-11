@@ -11,6 +11,8 @@ import cv2  # это временно!!!
 import os
 import sys
 
+from PyQt5.QtGui import QImage, QPixmap, QColor
+
 import numpy
 
 # типы клиентов
@@ -21,7 +23,11 @@ class typeClient(enum.Enum):
 # потом реализовать насследование от скласса Client!!!!
 
 class guardClient(QObject, Thread):
+    # запросить новый кадр для видео
     getNewImageSignal = pyqtSignal()
+
+    # запросить информацию об клиенте
+    getUserInfoSignal = pyqtSignal()
 
     def __init__(self, socket_, loginGuard_):
         QObject.__init__(self)
@@ -57,10 +63,15 @@ class guardClient(QObject, Thread):
             try:
                 command = self.waitCommand()
                 #   Действия по командам:
-                # начать транслировать видео
-                if command == "getVideo":
+                # запросить передачу нового кадра у сервера
+                if command == "getShot":
                     # сообщаем об готовности принять новое изображение
                     self.getNewImageSignal.emit()
+
+                # запросить инфу об клиенте
+                if cammand == "getInfoUser":
+                    self.getUserInfoSignal.emit()
+
             except:
                 print("соединение с охранником потеряно")
 
@@ -99,7 +110,7 @@ class cameraClient(QObject, Thread):
         self.__work = True
 
     def send(self, data):
-        self.__Socket.send(data)
+        self.__Socket.sendall(data)
 
     # запросить изображение у камеры
     def requestImage(self):

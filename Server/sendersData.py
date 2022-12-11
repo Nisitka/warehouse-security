@@ -1,14 +1,19 @@
 from threading import Thread
 import socket as socketNetwork
 from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtGui import QImage, QPixmap, QColor
 
 import sys
 
 import cv2
 
+import pickle
+
 from Client import typeClient
 
 from processingImages import processingImage
+
+from packerData import Packer
 
 class senderVideo(QObject):
 
@@ -18,6 +23,7 @@ class senderVideo(QObject):
         self.__clientCamera = clientCamera
         self.__clientGuard = clientGuard
 
+        # связываем камеру и клиента
         self.__clientCamera.updateImage.connect(self.sendImageGuard)
         self.__clientGuard.getNewImageSignal.connect(self.acceptNewImage)
 
@@ -29,11 +35,10 @@ class senderVideo(QObject):
         # берем изображение с клиента-камеры и обрабатываем нейро-ми сетями
         outImage = processingImage(self.__clientCamera.getCurrentImage())
 
-        # перевод в список numpy
-        outImage = outImage.reshape((-1,))
+        outBits = pickle.dumps(Packer("acceptShot", outImage))
 
-        # отправка данных
-        self.__clientGuard.send(outImage)
+        self.__clientGuard.send(outBits)
+        print("send")
 
     # принять новое изображение от камеры
     def acceptNewImage(self):

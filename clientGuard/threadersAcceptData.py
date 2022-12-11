@@ -2,7 +2,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from threading import Thread
 
-import cv2  # это временно!!!
+import cv2
 from PyQt5.QtGui import QImage, QPixmap, QColor
 
 import time
@@ -12,7 +12,11 @@ import numpy
 import socket
 import codecs
 
+import pickle
+
 import sys
+
+from packerData import Packer
 
 class threadVideo(QObject, Thread):
     # сообщаем ядру о потери соединения
@@ -44,18 +48,15 @@ class threadVideo(QObject, Thread):
 
     def getDataServer(self):
         try:
-            data = self.__Socket.recv(self.dataPackageSize)
-            data = list(data)
+            dataBits = self.__Socket.recv(self.dataPackageSize * 20)
 
-            # print(len(data))  # кол-во эдементов в массиве
-            if (len(data) != self.dataPackageSize):
-                print("потеря данных!")
+            # преобразуем биты в объект класса Packer
+            data = pickle.loads(dataBits)
 
-                # запрос следующего изображения
-                self.sendTextData("getVideo")
-            else:
-                # print("accept!")
-                npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
+            #   Дейсвия в зависимости от команды
+            # принять изображение для видео
+            if (data.getCommand() == "acceptShot"):
+                npImage = numpy.array(data.getData()).reshape(self.hVideo, self.wVideo, 3)
                 cv2.imwrite("img1.jpg", npImage)
                 # cv2.imwrite("img2.jpg", npImage)
 
@@ -64,7 +65,7 @@ class threadVideo(QObject, Thread):
                 self.importVideo.emit(pix)
 
                 # сообщаем о том, что готовы к след. изображению
-                self.sendTextData("getVideo")
+                self.sendTextData("getShot")
 
         except:
             print("соединение с сервером потеряно!")
@@ -73,6 +74,8 @@ class threadVideo(QObject, Thread):
 
             # прекращаем получение данных
             self.__working = False
+
+
 
     def sendTextData(self, textMessage):
         self.__Socket.sendall(textMessage.encode("utf-8"))
