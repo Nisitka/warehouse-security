@@ -91,7 +91,7 @@ class socketServer(QObject, Thread):
 
             # дожидаемся готовности клиента и только тогда отправляем инфу об камерах
             data = self.waitTextData(self.__GuardClients[-1].getSocket())
-            print(data + "!!!!")
+            print(data)
 
             # выбирается нужная камера (если такой нет, то сообщаем об этом)
             self.cap = self.__requestCamera(self.__GuardClients[-1].getLogin())

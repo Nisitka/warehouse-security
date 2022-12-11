@@ -56,7 +56,9 @@ class guardClient(QObject, Thread):
         while self.__work:
             try:
                 command = self.waitCommand()
-                if command == "Get":
+                #   Действия по командам:
+                # начать транслировать видео
+                if command == "getVideo":
                     # сообщаем об готовности принять новое изображение
                     self.getNewImageSignal.emit()
             except:

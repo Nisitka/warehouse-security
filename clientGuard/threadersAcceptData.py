@@ -52,7 +52,7 @@ class threadVideo(QObject, Thread):
                 print("потеря данных!")
 
                 # запрос следующего изображения
-                self.sendTextData("Get")
+                self.sendTextData("getVideo")
             else:
                 # print("accept!")
                 npImage = numpy.array(data).reshape(self.hVideo, self.wVideo, 3)
@@ -64,7 +64,7 @@ class threadVideo(QObject, Thread):
                 self.importVideo.emit(pix)
 
                 # сообщаем о том, что готовы к след. изображению
-                self.sendTextData("Get")
+                self.sendTextData("getVideo")
 
         except:
             print("соединение с сервером потеряно!")
