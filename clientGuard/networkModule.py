@@ -60,7 +60,7 @@ class Socket(QObject, Thread):
             # преобразуем биты в объект класса Packer
             data = pickle.loads(dataBits)
             command = data.getCommand()
-            print(command)
+            # print(command)
 
             #   Дейсвия в зависимости от команды
             # принять изображение для видео
