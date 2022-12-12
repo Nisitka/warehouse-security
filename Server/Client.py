@@ -19,6 +19,8 @@ import pickle
 from packerData import Packer
 from processingImages import processingImage
 
+import socket as socketNetwork
+
 from PIL import Image
 
 # типы клиентов
