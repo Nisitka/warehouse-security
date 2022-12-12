@@ -47,14 +47,13 @@ class Socket(QObject, Thread):
 
     def run(self):
         while self.__working:
-            print("_")
             self.getDataServer()
 
         print("Принятие изображений прекращено!")
         sys.exit()
 
     def getDataServer(self):
-        #try:
+        try:
             # принимаем любые данные
             dataBits = self.__Socket.recv(self.numPixImage * 10)
 
@@ -110,15 +109,14 @@ class Socket(QObject, Thread):
                     print("разрешенные камеры есть: " + infoCameras)
                     self.initCamerasInfo.emit(True)
 
-            '''
-            # except:
+        except:
             print("соединение с сервером потеряно!")
             # сообщаем ядру об потери соединения
             self.disconnectServer.emit()
 
             # прекращаем получение данных
             self.__working = False
-            '''
+
 
     def connectServer(self, host, port, login, password):
         # инициализируем свой сокет

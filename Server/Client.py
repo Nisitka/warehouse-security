@@ -155,8 +155,6 @@ class cameraClient(QObject, Thread):
         self.hVideo = 480
         self.wVideo = 640
 
-        print(str(smartType) + 'GGGGGGGGGGGG')
-
         self.__objType = objType
 
         self.__smartType = smartType
@@ -187,7 +185,6 @@ class cameraClient(QObject, Thread):
             self.__Socket.sendall("get".encode("utf-8"))
         else:
             # если камера сетевая то сразу взять изображение
-            print("ASASASASAS")
             self.acceptImage()
 
     def getCurrentImage(self):
@@ -213,7 +210,10 @@ class cameraClient(QObject, Thread):
         else:
             _, image = self.cap.read()
 
-            self.currentImage = cv2.resize(image, (self.wVideo, self.hVideo))
+            try:
+                self.currentImage = cv2.resize(image, (self.wVideo, self.hVideo))
+            except:
+                print("потеря данных")
 
         # сообщаем об измененном изображении
         self.updateImage.emit(self.__objType)
