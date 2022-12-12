@@ -39,7 +39,7 @@ class Core(QObject):
         self.__DataBase.blockingClient.connect(self.__blockingClient)
 
     def addSmartCamera(self, login, IPv4):
-        self.__server.getSocket().addCamerasClient(None, login, 2, IPv4)
+        self.__server.getSocket().addCamerasClient(None, login, 'Gate', 2, IPv4)
 
     def startServer(self, port, numClients):
         # при каждом запуске создается новый объект класса сервер,

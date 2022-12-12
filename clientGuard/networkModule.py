@@ -20,7 +20,8 @@ from packerData import Packer
 #from threadersAcceptData import threadAcceptCommand
 
 class Socket(QObject, Thread):
-    importVideoSignal = pyqtSignal(QPixmap, QPixmap)
+    importVideoGate = pyqtSignal(QPixmap)
+    importVideoBarrier = pyqtSignal(QPixmap)
 
     # результат авторизации пользователя
     initUserInfo = pyqtSignal(bool)
@@ -60,20 +61,31 @@ class Socket(QObject, Thread):
             # преобразуем биты в объект класса Packer
             data = pickle.loads(dataBits)
             command = data.getCommand()
+            print(command)
 
             #   Дейсвия в зависимости от команды
             # принять изображение для видео
-            if (command == "acceptShot"):
+            if (command == "acceptShotGate"):
                 npImage = numpy.array(data.getData()).reshape(self.hVideo, self.wVideo, 3)
                 cv2.imwrite("img1.jpg", npImage)
-                # cv2.imwrite("img2.jpg", npImage)
 
                 pix = QPixmap("img1.jpg")
 
-                self.importVideoSignal.emit(pix, pix)
+                self.importVideoBarrier.emit(pix)
 
                 # запрос на следующие изображение
-                self.sendPacker(None, "getShot")
+                self.sendPacker(None, "getShotGate")
+
+            if (command == "acceptShotBarrier"):
+                npImage = numpy.array(data.getData()).reshape(self.hVideo, self.wVideo, 3)
+                cv2.imwrite("img2.jpg", npImage)
+
+                pix = QPixmap("img2.jpg")
+
+                self.importVideoGate.emit(pix)
+
+                # запрос на следующие изображение
+                self.sendPacker(None, "getShotBarrier")
 
             #
             if (command == "setInfoVisits"):

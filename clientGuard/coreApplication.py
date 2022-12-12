@@ -31,8 +31,8 @@ class Core(QObject):
         self.netModule = Socket()
         self.netModule.initUserInfo[bool].connect(self.authorizationUser)
         self.netModule.initCamerasInfo[bool].connect(self.displayInfoCameras)
-        self.netModule.importVideoSignal[QPixmap, QPixmap].connect(self.getVideoServer)
-        # self.netModule.startAcceptData.connect(self.acceptData)
+        self.netModule.importVideoGate[QPixmap].connect(self.setShotGate)
+        self.netModule.importVideoBarrier[QPixmap].connect(self.setShotBarrier)
         self.netModule.disconnectServerSignal.connect(self.eventDisconnectServer)
 
     def eventDisconnectServer(self):
@@ -78,9 +78,11 @@ class Core(QObject):
         except:
             print("Не удалось повторно подключиться")
 
-    def getVideoServer(self, imagePeople, imageCar):
-        self.guiApp.mainWin.updateVideoBarrier(imagePeople)
-        self.guiApp.mainWin.updateVideoCar(imageCar)
+    def setShotGate(self, image):
+        self.guiApp.mainWin.updateVideoCar(image)
+
+    def setShotBarrier(self, image):
+        self.guiApp.mainWin.updateVideoBarrier(image)
 
     def run(self):
         # открываем окно авторизации пользователя

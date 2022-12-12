@@ -95,8 +95,8 @@ class socketServer(QObject, Thread):
             self.sendPacker(self.__GuardClients[-1].getSocket(), dataUser_DataBase, 'initUser')
 
             # выбирается нужная камера по логину охранника (если такой нет, то сообщаем об этом)
-            self.cap = self.__requestCamera(self.__GuardClients[-1].getLogin())
-            if self.cap is None:
+            self.cameras = self.__requestCamera(self.__GuardClients[-1].getLogin())
+            if self.cameras is None:
                 print("камеры для охранника не найдено")
 
                 # информируем ПО охранника об отсутствии подключенных разрешенных камер
@@ -107,36 +107,47 @@ class socketServer(QObject, Thread):
                 infoCameras = "информация об камерах и все такое"
                 self.sendPacker(self.__GuardClients[-1].getSocket(), infoCameras, 'infoCameras')
 
-                # добавляем камеру к клиенту охранника
-                self.__GuardClients[-1].addCamera(self.cap)
+                # добавляем камеру(ы) к клиенту охранника
+                for camera in self.cameras:
+                    self.__GuardClients[-1].addCamera(camera)
 
                 # запустить клиент-охранника в основном режиме
                 self.__GuardClients[-1].start()
 
         else:
-            # добаляем камеру в общий список подкл. камер
-            self.addCamerasClient(self.__newConnection, login)
-            #self.__CameraClients.append(cameraClient(self.__newConnection, login))
+            # по логину узнаем её тип
+            if (login == 'smartCamera'):
+                objType = 'Gate'
+            else:
+                objType = 'Barrier'
 
-            # проверяем, есть ли клинты-охранники, которые могут её видеть
-            # если да, то добаляем камеры к этим клиентам
-            '''
-            какой-то код
-            '''
+            # добаляем камеру в общий список подкл. камер
+            self.addCamerasClient(self.__newConnection, login, objType)
 
             # запускаем клиента-камеру (начинает ожидание передачи данных)
             self.__CameraClients[-1].start()
 
-    def addCamerasClient(self, socket, login, type=1, IPv4=None):
-        if (type == 1):
-            self.__CameraClients.append(cameraClient(socket, login))
+    def addCamerasClient(self, socket, login, objType, smartType=1, IPv4=None):
+        if (smartType == 1):
+            self.__CameraClients.append(cameraClient(socket, login, objType))
         else:
-            self.__CameraClients.append(cameraClient(None, login, 2, IPv4))
+            self.__CameraClients.append(cameraClient(None, login, objType, 2, IPv4))
 
+        # проверяем, есть ли клинты-охранники, которые могут её видеть
+        # если да, то добаляем камеры к этим клиентам
+        '''
+        какой-то код
+        '''
+        if len(self.__GuardClients) > 0:
+            self.__GuardClients[-1].addCamera(self.__CameraClients[-1])
 
     def __requestCamera(self, loginGuard):
         if len(self.__CameraClients) > 0:
-            return self.__CameraClients[-1]
+            cameras = []
+            for camera in self.__CameraClients:
+                cameras.append(camera)
+
+            return cameras
         else:
             return None
 

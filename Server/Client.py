@@ -26,6 +26,10 @@ class typeClient(enum.Enum):
     Guard = 1
     Camera = 2
 
+class typeObjCamera(enum.Enum):
+    Gate = 0
+    Barrier = 1
+
 # потом реализовать насследование от скласса Client!!!!
 
 class guardClient(QObject, Thread):
@@ -50,7 +54,7 @@ class guardClient(QObject, Thread):
 
         self.__work = True
 
-        self.__Cameras = []
+        self.__Cameras = [None, None]
 
     def getLogin(self):
         return self.__login
@@ -60,27 +64,34 @@ class guardClient(QObject, Thread):
 
     # добавление камеры клиенту
     def addCamera(self, cameraClient):
-        self.__Cameras.append(cameraClient)
 
-        # связываем камеру и клиента
-        cameraClient.updateImage.connect(self.sendImageGuard)
-        self.acceptNewImage()
+        if cameraClient.getObjType() == 'Gate':
+            self.__Cameras[typeObjCamera.Gate.value] = cameraClient
+        if cameraClient.getObjType() == 'Barrier':
+            self.__Cameras[typeObjCamera.Barrier.value] = cameraClient
 
-    def acceptNewImage(self):
-        #numCamera = numCamera_
-        numCamera = -1  # временно
+        cameraClient.updateImage[str].connect(self.sendImageGuard)
+        cameraClient.requestImage()
 
-        self.__Cameras[numCamera].requestImage()
+    def acceptImageGate(self):
+        self.__Cameras[typeObjCamera.Gate.value].requestImage()
+
+    def acceptImageBarrier(self):
+        self.__Cameras[typeObjCamera.Barrier.value].requestImage()
 
     # отправка изображения с камеры охраннику
-    def sendImageGuard(self):
-        #numCamera = numCamera_
-        numCamera = -1  # временно
+    def sendImageGuard(self, typeCamera):
+        print(self.__Cameras)
 
-        # берем изображение с клиента-камеры и обрабатываем нейро-ми сетями
-        outImage = processingImage(self.__Cameras[numCamera].getCurrentImage())
+        if typeCamera == 'Gate':
+            outImage = self.__Cameras[typeObjCamera.Gate.value].getCurrentImage()
+        if typeCamera == 'Barrier':
+            outImage = self.__Cameras[typeObjCamera.Barrier.value].getCurrentImage()
 
-        outBits = pickle.dumps(Packer("acceptShot", outImage))
+        outImage = processingImage(outImage)
+
+        outBits = pickle.dumps(Packer("acceptShot" + str(typeCamera), outImage))
+
         self.__Socket.send(outBits)
 
     def waitData(self):
@@ -104,9 +115,13 @@ class guardClient(QObject, Thread):
 
             #   Действия по командам:
             # запросить передачу нового кадра у сервера
-            if command == "getShot":
+            if command == "getShotGate":
                 # принимаем новое изображение
-                self.acceptNewImage()
+                self.acceptImageGate()
+
+            if command == "getShotBarrier":
+                # принимаем новое изображение
+                self.acceptImageBarrier()
 
             # запросить инфу об клиенте (для теста!!!!!)
             if command == "getInfoVisits":
@@ -129,42 +144,55 @@ class guardClient(QObject, Thread):
 
 
 class cameraClient(QObject, Thread):
-    updateImage = pyqtSignal()
+    updateImage = pyqtSignal(str)  # передаем свой тип
 
-    def __init__(self, socket_, loginCamera_, type=1, IPv4 = None):
+    def __init__(self, socket_, loginCamera_, objType, smartType=1, IPv4 = None):
         QObject.__init__(self)
         Thread.__init__(self)
 
-        self.__type = type
-        if (self.__type == 2):
+        self.hVideo = 480
+        self.wVideo = 640
+
+        print(str(smartType) + 'GGGGGGGGGGGG')
+
+        self.__objType = objType
+
+        self.__smartType = smartType
+        if (self.__smartType == 2):
             self.cap = cv2.VideoCapture('http://' + str(IPv4) +':8080/video')
+            self.acceptImage()
+
         else:
             # сокет взаимодействия с камерой
             self.__Socket = socket_
 
-        self.hVideo = 480
-        self.wVideo = 640
         self.imageSize = self.hVideo * self.wVideo * 3
 
         self.login = loginCamera_
 
         self.__work = True
 
+    def getObjType(self):
+        return self.__objType
+
     def send(self, data):
         self.__Socket.sendall(data)
 
     # запросить изображение у камеры
     def requestImage(self):
-        if (self.__type == 1):
+        if (self.__smartType == 1):
+            # если проводна то отправить запрос на ПО ПК с web-камерой
             self.__Socket.sendall("get".encode("utf-8"))
         else:
+            # если камера сетевая то сразу взять изображение
+            print("ASASASASAS")
             self.acceptImage()
 
     def getCurrentImage(self):
         return self.currentImage
 
     def acceptImage(self):
-        if (self.__type == 1):
+        if (self.__smartType == 1):
             image = self.__Socket.recv(self.imageSize)
             image = list(image)
 
@@ -186,12 +214,12 @@ class cameraClient(QObject, Thread):
             self.currentImage = cv2.resize(image, (self.wVideo, self.hVideo))
 
         # сообщаем об измененном изображении
-        self.updateImage.emit()
+        self.updateImage.emit(self.__objType)
 
     def remove(self):
         self.__work = False
 
-        if (self.__type == 1):
+        if (self.__smartType == 1):
             self.__closeSocket()
 
     def __closeSocket(self):
@@ -205,7 +233,7 @@ class cameraClient(QObject, Thread):
 
     # всегда ждет принятие нового изображения
     def run(self):
-        if (self.__type == 1):
+        if (self.__smartType == 1):
             # сообщаем камере что готовы принимать видео
             self.__Socket.sendall(codecs.encode("readyGetVideo", 'UTF-8'))
 
